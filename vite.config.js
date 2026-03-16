@@ -8,8 +8,8 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
-        drawTrack: resolve(__dirname, 'draw-track.html'),
-        drawLabels: resolve(__dirname, 'draw-labels.html'),
+        // drawTrack: resolve(__dirname, 'draw-track.html'),
+        // drawLabels: resolve(__dirname, 'draw-labels.html'),
       },
     },
   },
