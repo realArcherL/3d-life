@@ -8,6 +8,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
+        f1_miami: resolve(__dirname, 'f1-miami.html'),
         // drawTrack: resolve(__dirname, 'draw-track.html'),
         // drawLabels: resolve(__dirname, 'draw-labels.html'),
       },
