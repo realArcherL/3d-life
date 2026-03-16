@@ -20,6 +20,7 @@
  */
 
 import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 // ═══════════════════════════════════════════════
 // TRON PALETTE
@@ -99,31 +100,6 @@ const TRACK_POINTS = [
   [-292.5, -180.6], // 49
   [-139.3, -238.7], // 50
   [-48.7, -229.3], // 51 Final approach
-];
-
-// ═══════════════════════════════════════════════
-// TURN LABELS — from FIA media map
-// ═══════════════════════════════════════════════
-const TURN_LABELS = [
-  { n: 1, x: 375, z: 30 },
-  { n: 2, x: 310, z: 80 },
-  { n: 3, x: 305, z: 180 },
-  { n: 4, x: 245, z: 248 },
-  { n: 5, x: 155, z: 270 },
-  { n: 6, x: 110, z: 268 },
-  { n: 7, x: 50, z: 255 },
-  { n: 8, x: 15, z: 230 },
-  { n: 9, x: -175, z: 88 },
-  { n: 10, x: -248, z: 96 },
-  { n: 11, x: -345, z: 152 },
-  { n: 12, x: -430, z: 78 },
-  { n: 13, x: -482, z: 70 },
-  { n: 14, x: -520, z: 78 },
-  { n: 15, x: -562, z: 100 },
-  { n: 16, x: -600, z: 155 },
-  { n: 17, x: 175, z: 325 },
-  { n: 18, x: 395, z: 305 },
-  { n: 19, x: 835, z: 70 },
 ];
 
 // ═══════════════════════════════════════════════
@@ -227,88 +203,145 @@ const STANDS_DATA = [
 // SCENE
 // ═══════════════════════════════════════════════
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x000000);
-scene.fog = new THREE.FogExp2(0x000508, 0.00018);
+scene.background = new THREE.Color(0x020208);
 
 const camera = new THREE.PerspectiveCamera(
-  50,
+  45,
   window.innerWidth / window.innerHeight,
   1,
-  10000,
+  20000,
 );
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 3));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.4;
+renderer.toneMappingExposure = 1.6;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
 
-// ─── Lighting (minimal, TRON relies on emissives) ───
-scene.add(new THREE.AmbientLight(0x112233, 0.3));
+// ─── Lighting ───
+scene.add(new THREE.AmbientLight(0x223344, 0.5));
 
-const keyLight = new THREE.DirectionalLight(0x88ccff, 0.4);
-keyLight.position.set(400, 600, -200);
+const keyLight = new THREE.DirectionalLight(0x88ccff, 0.6);
+keyLight.position.set(500, 800, -300);
+keyLight.castShadow = true;
+keyLight.shadow.mapSize.set(1024, 1024);
 scene.add(keyLight);
 
-const rimLight = new THREE.DirectionalLight(0x00f0ff, 0.15);
-rimLight.position.set(-500, 300, 500);
+const rimLight = new THREE.DirectionalLight(0x00f0ff, 0.25);
+rimLight.position.set(-600, 400, 600);
 scene.add(rimLight);
 
+const fillLight = new THREE.DirectionalLight(0x334466, 0.2);
+fillLight.position.set(0, 200, -800);
+scene.add(fillLight);
+
 // ═══════════════════════════════════════════════
-// GROUND — dark with TRON grid
+// PLATFORM — GitHub Skyline-style raised pedestal
 // ═══════════════════════════════════════════════
-function buildGrid() {
+const PLATFORM_Y = 30; // track sits this high above the void
+
+function buildPlatform() {
   const group = new THREE.Group();
 
-  // Dark ground plane
-  const groundGeo = new THREE.PlaneGeometry(6000, 4000);
-  const groundMat = new THREE.MeshStandardMaterial({
-    color: TRON.darkGround,
-    roughness: 0.98,
-    metalness: 0.0,
+  // Main slab (rounded-rect feel via a box for now)
+  const slabW = 2200,
+    slabD = 1100,
+    slabH = PLATFORM_Y;
+  const slabGeo = new THREE.BoxGeometry(slabW, slabH, slabD);
+  const slabMat = new THREE.MeshStandardMaterial({
+    color: 0x060c12,
+    roughness: 0.85,
+    metalness: 0.2,
   });
-  const ground = new THREE.Mesh(groundGeo, groundMat);
-  ground.rotation.x = -Math.PI / 2;
-  ground.position.y = -2;
-  group.add(ground);
+  const slab = new THREE.Mesh(slabGeo, slabMat);
+  slab.position.set(100, PLATFORM_Y / 2, 20);
+  slab.receiveShadow = true;
+  group.add(slab);
 
-  // Grid lines
+  // Glowing top edge (neon rim like Skyline)
+  const edgesGeo = new THREE.EdgesGeometry(slabGeo);
+  const edgeMat = new THREE.LineBasicMaterial({
+    color: TRON.cyan,
+    transparent: true,
+    opacity: 0.18,
+  });
+  const edges = new THREE.LineSegments(edgesGeo, edgeMat);
+  edges.position.copy(slab.position);
+  group.add(edges);
+
+  // Bright rim line along the top perimeter
+  const hw = slabW / 2,
+    hd = slabD / 2;
+  const cx = 100,
+    cz = 20,
+    y = PLATFORM_Y + 0.1;
+  const rimPts = [
+    new THREE.Vector3(cx - hw, y, cz - hd),
+    new THREE.Vector3(cx + hw, y, cz - hd),
+    new THREE.Vector3(cx + hw, y, cz + hd),
+    new THREE.Vector3(cx - hw, y, cz + hd),
+    new THREE.Vector3(cx - hw, y, cz - hd),
+  ];
+  group.add(
+    new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints(rimPts),
+      new THREE.LineBasicMaterial({
+        color: TRON.cyan,
+        transparent: true,
+        opacity: 0.45,
+      }),
+    ),
+  );
+
+  // Grid lines on top surface
   const gridMat = new THREE.LineBasicMaterial({
     color: TRON.cyan,
     transparent: true,
-    opacity: 0.04,
+    opacity: 0.035,
   });
   const spacing = 50;
-  const extentX = 1500,
-    extentZ = 1000;
+  for (let x = cx - hw; x <= cx + hw; x += spacing) {
+    const pts = [
+      new THREE.Vector3(x, y, cz - hd),
+      new THREE.Vector3(x, y, cz + hd),
+    ];
+    group.add(
+      new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), gridMat),
+    );
+  }
+  for (let z = cz - hd; z <= cz + hd; z += spacing) {
+    const pts = [
+      new THREE.Vector3(cx - hw, y, z),
+      new THREE.Vector3(cx + hw, y, z),
+    ];
+    group.add(
+      new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), gridMat),
+    );
+  }
 
-  for (let x = -extentX; x <= extentX; x += spacing) {
-    const pts = [
-      new THREE.Vector3(x, -1.5, -extentZ),
-      new THREE.Vector3(x, -1.5, extentZ),
-    ];
-    group.add(
-      new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), gridMat),
-    );
-  }
-  for (let z = -extentZ; z <= extentZ; z += spacing) {
-    const pts = [
-      new THREE.Vector3(-extentX, -1.5, z),
-      new THREE.Vector3(extentX, -1.5, z),
-    ];
-    group.add(
-      new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), gridMat),
-    );
-  }
+  // Ambient floor far below (for depth)
+  const floorGeo = new THREE.PlaneGeometry(12000, 12000);
+  const floorMat = new THREE.MeshStandardMaterial({
+    color: 0x010204,
+    roughness: 1.0,
+  });
+  const floor = new THREE.Mesh(floorGeo, floorMat);
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.y = -5;
+  group.add(floor);
 
   return group;
 }
-scene.add(buildGrid());
+scene.add(buildPlatform());
 
 // ═══════════════════════════════════════════════
 // TRACK CURVE
 // ═══════════════════════════════════════════════
-const curvePoints = TRACK_POINTS.map(([x, z]) => new THREE.Vector3(x, 0, z));
+const curvePoints = TRACK_POINTS.map(
+  ([x, z]) => new THREE.Vector3(x, PLATFORM_Y, z),
+);
 const curve = new THREE.CatmullRomCurve3(curvePoints, true, 'centripetal', 0.5);
 
 const TRACK_WIDTH = 14;
@@ -351,7 +384,12 @@ function buildGlowEdge(offset, color, layers) {
     const t = i / N_SEG;
     const p = curve.getPointAt(t);
     const n = getNormal(t);
-    pts.push(p.clone().add(n.clone().multiplyScalar(offset)).setY(0.5));
+    pts.push(
+      p
+        .clone()
+        .add(n.clone().multiplyScalar(offset))
+        .setY(PLATFORM_Y + 0.5),
+    );
   }
 
   layers.forEach(({ opacity, yOff }) => {
@@ -398,7 +436,7 @@ const clMat = new THREE.LineDashedMaterial({
 });
 const cl = new THREE.Line(clGeo, clMat);
 cl.computeLineDistances();
-cl.position.y = 0.3;
+cl.position.y = PLATFORM_Y + 0.3;
 scene.add(cl);
 
 // ═══════════════════════════════════════════════
@@ -457,7 +495,7 @@ function buildKerbs() {
     outer.position.copy(
       p.clone().add(norm.clone().multiplyScalar(TRACK_HALF + 1.2)),
     );
-    outer.position.y = 0.25;
+    outer.position.y = PLATFORM_Y + 0.25;
     outer.lookAt(outer.position.clone().add(tang));
     group.add(outer);
 
@@ -466,7 +504,7 @@ function buildKerbs() {
     inner.position.copy(
       p.clone().add(norm.clone().multiplyScalar(-(TRACK_HALF + 1.2))),
     );
-    inner.position.y = 0.25;
+    inner.position.y = PLATFORM_Y + 0.25;
     inner.lookAt(inner.position.clone().add(tang));
     group.add(inner);
   }
@@ -490,8 +528,8 @@ function buildWalls() {
       const p = curve.getPointAt(t);
       const n = getNormal(t);
       const base = p.clone().add(n.clone().multiplyScalar(offset));
-      botPts.push(base.clone().setY(0));
-      topPts.push(base.clone().setY(wallH));
+      botPts.push(base.clone().setY(PLATFORM_Y));
+      topPts.push(base.clone().setY(PLATFORM_Y + wallH));
     }
 
     const wallMat = new THREE.LineBasicMaterial({
@@ -525,126 +563,36 @@ function buildWalls() {
 scene.add(buildWalls());
 
 // ═══════════════════════════════════════════════
-// GRANDSTANDS
+// GRANDSTAND LABELS — text-only markers at each stand location
 // ═══════════════════════════════════════════════
-function buildStand({ name, cx, cz, width, depth, angle, height }) {
-  const g = new THREE.Group();
-  g.position.set(cx, 0, cz);
-  // -angle because Three.js Y-rotation is CW from above while atan2 gives CCW
-  g.rotation.y = -angle;
+await document.fonts.load('bold 100px "Orbitron"').catch(() => {});
 
-  const N_TIERS = 4;
-  const tierW = width;
-  const tierD = depth / N_TIERS;
-  const tierH = height / N_TIERS;
+function makeStandLabel(name, cx, cz) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1024;
+  canvas.height = 128;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, 1024, 128);
+  ctx.fillStyle = 'rgba(0, 240, 255, 0.88)';
+  ctx.font = 'bold 48px "Orbitron", "Helvetica Neue", Arial, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(name, 512, 64);
 
-  for (let i = 0; i < N_TIERS; i++) {
-    // Each tier steps back (larger z) and up (larger y)
-    const yMid = (i + 0.5) * tierH;
-    const zMid = -depth / 2 + (i + 0.5) * tierD;
-
-    // Dark concrete slab
-    const geo = new THREE.BoxGeometry(tierW, tierH, tierD);
-    const mesh = new THREE.Mesh(
-      geo,
-      new THREE.MeshStandardMaterial({
-        color: 0x040810,
-        roughness: 0.9,
-        metalness: 0.15,
-      }),
-    );
-    mesh.position.set(0, yMid, zMid);
-    g.add(mesh);
-
-    // Glowing wireframe (brighten on higher tiers)
-    const edgeMesh = new THREE.LineSegments(
-      new THREE.EdgesGeometry(geo),
-      new THREE.LineBasicMaterial({
-        color: TRON.cyan,
-        transparent: true,
-        opacity: 0.1 + i * 0.04,
-      }),
-    );
-    edgeMesh.position.copy(mesh.position);
-    g.add(edgeMesh);
-  }
-
-  // ─ Bright neon front edge (track-facing bottom) ─
-  const addLine = (pts, opacity) => {
-    g.add(
-      new THREE.Line(
-        new THREE.BufferGeometry().setFromPoints(pts),
-        new THREE.LineBasicMaterial({
-          color: TRON.cyan,
-          transparent: true,
-          opacity,
-        }),
-      ),
-    );
-  };
-
-  const hw = width / 2,
-    hd = depth / 2;
-  addLine(
-    [new THREE.Vector3(-hw, 0, -hd), new THREE.Vector3(hw, 0, -hd)],
-    0.65,
-  );
-  // Top-back ridge
-  addLine(
-    [new THREE.Vector3(-hw, height, hd), new THREE.Vector3(hw, height, hd)],
-    0.3,
-  );
-  // Side profiles
-  addLine(
-    [new THREE.Vector3(-hw, 0, -hd), new THREE.Vector3(-hw, height, hd)],
-    0.35,
-  );
-  addLine(
-    [new THREE.Vector3(hw, 0, -hd), new THREE.Vector3(hw, height, hd)],
-    0.35,
-  );
-
-  // Vertical columns every ~25 m
-  const nCols = Math.max(2, Math.round(width / 25));
-  for (let i = 1; i < nCols; i++) {
-    const xPos = -hw + (width / nCols) * i;
-    addLine(
-      [new THREE.Vector3(xPos, 0, -hd), new THREE.Vector3(xPos, height, hd)],
-      0.12,
-    );
-  }
-
-  // ── Name label floating above the stand ──
-  const labelCanvas = document.createElement('canvas');
-  labelCanvas.width = 512;
-  labelCanvas.height = 64;
-  const lctx = labelCanvas.getContext('2d');
-  lctx.fillStyle = 'rgba(0,240,255,0.85)';
-  lctx.font = 'bold 28px Orbitron, monospace';
-  lctx.textAlign = 'center';
-  lctx.textBaseline = 'middle';
-  lctx.fillText(name, 256, 32);
-  const labelSprite = new THREE.Sprite(
+  const sprite = new THREE.Sprite(
     new THREE.SpriteMaterial({
-      map: new THREE.CanvasTexture(labelCanvas),
+      map: new THREE.CanvasTexture(canvas),
       depthTest: false,
       transparent: true,
-      opacity: 0.7,
+      opacity: 0.85,
     }),
   );
-  labelSprite.scale.set(60, 8, 1);
-  labelSprite.position.set(0, height + 10, 0);
-  g.add(labelSprite);
-
-  return g;
+  sprite.scale.set(65, 8, 1);
+  sprite.position.set(cx, PLATFORM_Y + 22, cz);
+  return sprite;
 }
 
-function buildStands() {
-  const g = new THREE.Group();
-  STANDS_DATA.forEach(s => g.add(buildStand(s)));
-  return g;
-}
-scene.add(buildStands());
+STANDS_DATA.forEach(s => scene.add(makeStandLabel(s.name, s.cx, s.cz)));
 // ═══════════════════════════════════════════════
 function buildStartFinish() {
   const canvas = document.createElement('canvas');
@@ -669,7 +617,7 @@ function buildStartFinish() {
 
   const p = curve.getPointAt(0);
   const t = curve.getTangentAt(0).normalize();
-  mesh.position.set(p.x, 0.6, p.z);
+  mesh.position.set(p.x, PLATFORM_Y + 0.6, p.z);
   mesh.rotation.z = Math.atan2(t.x, t.z);
 
   return mesh;
@@ -711,7 +659,7 @@ function buildDRSZones() {
         p
           .clone()
           .add(n.clone().multiplyScalar(TRACK_HALF - 2))
-          .setY(0.6),
+          .setY(PLATFORM_Y + 0.6),
       );
     }
     const geo = new THREE.BufferGeometry().setFromPoints(pts);
@@ -754,8 +702,14 @@ function buildDRSZones() {
 
     // Cross-track orange line
     const pts = [
-      p.clone().add(n.clone().multiplyScalar(TRACK_HALF)).setY(0.6),
-      p.clone().add(n.clone().multiplyScalar(-TRACK_HALF)).setY(0.6),
+      p
+        .clone()
+        .add(n.clone().multiplyScalar(TRACK_HALF))
+        .setY(PLATFORM_Y + 0.6),
+      p
+        .clone()
+        .add(n.clone().multiplyScalar(-TRACK_HALF))
+        .setY(PLATFORM_Y + 0.6),
     ];
     group.add(
       new THREE.Line(
@@ -777,7 +731,7 @@ function buildDRSZones() {
         opacity: 0.5,
       }),
     );
-    sphere.position.copy(p).setY(4);
+    sphere.position.copy(p).setY(PLATFORM_Y + 4);
     group.add(sphere);
   });
 
@@ -799,11 +753,11 @@ function buildSectorLine(t, color, heightBoost) {
     p
       .clone()
       .add(n.clone().multiplyScalar(TRACK_HALF + 5))
-      .setY(0.8 + h),
+      .setY(PLATFORM_Y + 0.8 + h),
     p
       .clone()
       .add(n.clone().multiplyScalar(-(TRACK_HALF + 5)))
-      .setY(0.8 + h),
+      .setY(PLATFORM_Y + 0.8 + h),
   ];
 
   // Bright line
@@ -817,7 +771,7 @@ function buildSectorLine(t, color, heightBoost) {
   // Vertical glow column at each end
   [0, 1].forEach(idx => {
     const base = pts[idx].clone();
-    const top = base.clone().setY(15);
+    const top = base.clone().setY(PLATFORM_Y + 15);
     scene.add(
       new THREE.Line(
         new THREE.BufferGeometry().setFromPoints([base, top]),
@@ -837,105 +791,6 @@ buildSectorLine(0.198, TRON.red);
 buildSectorLine(0.398, TRON.purple);
 // Speed trap ≈ t=0.475 (150m before T17)
 buildSectorLine(0.475, TRON.orange, 2);
-
-// ═══════════════════════════════════════════════
-// TURN LABELS — glowing TRON-style sprites
-// ═══════════════════════════════════════════════
-function makeTurnSprite(text, color, size) {
-  const px = 256;
-  const canvas = document.createElement('canvas');
-  canvas.width = px;
-  canvas.height = px;
-  const ctx = canvas.getContext('2d');
-
-  // Outer glow ring
-  const gradient = ctx.createRadialGradient(
-    px / 2,
-    px / 2,
-    px * 0.25,
-    px / 2,
-    px / 2,
-    px * 0.48,
-  );
-  gradient.addColorStop(0, 'transparent');
-  gradient.addColorStop(0.7, 'transparent');
-  gradient.addColorStop(
-    1,
-    color === '#00f0ff' ? 'rgba(0,240,255,0.15)' : 'rgba(255,45,0,0.15)',
-  );
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, px, px);
-
-  // Circle
-  ctx.beginPath();
-  ctx.arc(px / 2, px / 2, px * 0.32, 0, Math.PI * 2);
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 3;
-  ctx.stroke();
-
-  // Fill with dark
-  ctx.fillStyle = 'rgba(0,5,8,0.85)';
-  ctx.fill();
-
-  // Text
-  ctx.fillStyle = color;
-  ctx.font = `bold ${text.length > 2 ? 60 : text.length > 1 ? 72 : 84}px Orbitron, monospace`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(text, px / 2, px / 2 + 4);
-
-  const tex = new THREE.CanvasTexture(canvas);
-  const mat = new THREE.SpriteMaterial({
-    map: tex,
-    depthTest: false,
-    transparent: true,
-  });
-  const sprite = new THREE.Sprite(mat);
-  sprite.scale.set(size || 28, size || 28, 1);
-  return sprite;
-}
-
-TURN_LABELS.forEach(({ n, x, z }) => {
-  const sprite = makeTurnSprite(String(n), '#ff2d00', 26);
-  sprite.position.set(x, 32, z);
-  scene.add(sprite);
-});
-
-// S/F label
-const sfSprite = makeTurnSprite('S/F', '#00f0ff', 30);
-sfSprite.position.set(53, 35, -190);
-scene.add(sfSprite);
-
-// Sector labels
-const s1Sprite = makeTurnSprite('S1', '#ff2d00', 22);
-s1Sprite.position.set(5, 35, 215);
-scene.add(s1Sprite);
-
-const s2Sprite = makeTurnSprite('S2', '#a855f7', 22);
-s2Sprite.position.set(-598, 35, 140);
-scene.add(s2Sprite);
-
-// Speed trap
-const stSprite = makeTurnSprite('T', '#ff8800', 22);
-stSprite.position.set(-420, 35, 225);
-scene.add(stSprite);
-
-// ═══════════════════════════════════════════════
-// CONTROL POINT DEBUG DOTS (faint, toggleable)
-// ═══════════════════════════════════════════════
-const dotGroup = new THREE.Group();
-const dotGeo = new THREE.SphereGeometry(2.5, 8, 8);
-TRACK_POINTS.forEach(([x, z], i) => {
-  const mat = new THREE.MeshBasicMaterial({
-    color: i === 0 ? TRON.green : TRON.cyan,
-    transparent: true,
-    opacity: i === 0 ? 0.6 : 0.15,
-  });
-  const dot = new THREE.Mesh(dotGeo, mat);
-  dot.position.set(x, 1.5, z);
-  dotGroup.add(dot);
-});
-scene.add(dotGroup);
 
 // ═══════════════════════════════════════════════
 // ANIMATED PARTICLE (racing dot along track)
@@ -962,179 +817,24 @@ scene.add(trailGlow);
 let racerT = 0;
 
 // ═══════════════════════════════════════════════
-// MARSHAL SECTOR MARKERS (from FIA map: MS01-MS20)
-// Small dim labels placed roughly at sector boundaries
+// CAMERA — OrbitControls (Skyline-style smooth orbit)
 // ═══════════════════════════════════════════════
-function makeMarshalLabel(text, x, z) {
-  const canvas = document.createElement('canvas');
-  canvas.width = 128;
-  canvas.height = 48;
-  const ctx = canvas.getContext('2d');
-  ctx.fillStyle = 'rgba(0,240,255,0.3)';
-  ctx.font = '18px monospace';
-  ctx.textAlign = 'center';
-  ctx.fillText(text, 64, 30);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(100, PLATFORM_Y, 20);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.rotateSpeed = 0.6;
+controls.zoomSpeed = 1.0;
+controls.panSpeed = 0.8;
+controls.minDistance = 200;
+controls.maxDistance = 4000;
+controls.maxPolarAngle = Math.PI * 0.48; // prevent going under the platform
+controls.minPolarAngle = 0.05;
+controls.screenSpacePanning = false; // pan parallel to ground
 
-  const tex = new THREE.CanvasTexture(canvas);
-  const mat = new THREE.SpriteMaterial({
-    map: tex,
-    depthTest: false,
-    transparent: true,
-    opacity: 0.5,
-  });
-  const sprite = new THREE.Sprite(mat);
-  sprite.position.set(x, 18, z);
-  sprite.scale.set(20, 7, 1);
-  scene.add(sprite);
-}
-
-// Approximate MS positions from FIA media map
-const marshalSectors = [
-  ['MS01', 150, -150],
-  ['MS02', 320, 50],
-  ['MS03', 270, 140],
-  ['MS04', 180, 210],
-  ['MS05', 100, 250],
-  ['MS06', 60, 245],
-  ['MS07', -80, 175],
-  ['MS08', -150, 120],
-  ['MS09', -260, 115],
-  ['MS10', -360, 140],
-  ['MS11', -450, 75],
-  ['MS12', -530, 90],
-  ['MS13', -575, 120],
-  ['MS14', -590, 170],
-  ['MS15', -540, 218],
-  ['MS16', -300, 240],
-  ['MS17', -60, 245],
-  ['MS18', 250, 310],
-  ['MS19', 450, 280],
-  ['MS20', 700, 130],
-];
-marshalSectors.forEach(([name, x, z]) => makeMarshalLabel(name, x, z));
-
-// ═══════════════════════════════════════════════
-// CAMERA CONTROLS
-// ═══════════════════════════════════════════════
-const ctrl = {
-  target: new THREE.Vector3(100, 0, 50),
-  phi: Math.PI * 0.3,
-  theta: Math.PI * 0.15,
-  radius: 1200,
-  dragging: false,
-  panning: false,
-  prev: { x: 0, y: 0 },
-};
-
-function syncCamera() {
-  const { radius, phi, theta, target } = ctrl;
-  camera.position.set(
-    target.x + radius * Math.sin(phi) * Math.sin(theta),
-    target.y + radius * Math.cos(phi),
-    target.z + radius * Math.sin(phi) * Math.cos(theta),
-  );
-  camera.lookAt(target);
-}
-syncCamera();
-
-const el = renderer.domElement;
-
-el.addEventListener('mousedown', e => {
-  if (e.button === 0) ctrl.dragging = true;
-  if (e.button === 2) ctrl.panning = true;
-  ctrl.prev = { x: e.clientX, y: e.clientY };
-});
-
-el.addEventListener('mousemove', e => {
-  const dx = e.clientX - ctrl.prev.x;
-  const dy = e.clientY - ctrl.prev.y;
-  ctrl.prev = { x: e.clientX, y: e.clientY };
-
-  if (ctrl.dragging) {
-    ctrl.theta -= dx * 0.004;
-    ctrl.phi = Math.max(0.05, Math.min(Math.PI * 0.49, ctrl.phi + dy * 0.004));
-    syncCamera();
-  }
-  if (ctrl.panning) {
-    const right = new THREE.Vector3();
-    camera.getWorldDirection(right).cross(camera.up).normalize();
-    const fwd = new THREE.Vector3();
-    camera.getWorldDirection(fwd);
-    fwd.y = 0;
-    fwd.normalize();
-    ctrl.target.add(right.multiplyScalar(-dx * ctrl.radius * 0.001));
-    ctrl.target.add(fwd.multiplyScalar(dy * ctrl.radius * 0.001));
-    syncCamera();
-  }
-});
-
-window.addEventListener('mouseup', () => {
-  ctrl.dragging = false;
-  ctrl.panning = false;
-});
-el.addEventListener('contextmenu', e => e.preventDefault());
-
-el.addEventListener(
-  'wheel',
-  e => {
-    ctrl.radius = Math.max(
-      60,
-      Math.min(4000, ctrl.radius * (1 + e.deltaY * 0.0008)),
-    );
-    syncCamera();
-  },
-  { passive: true },
-);
-
-// Touch
-let lastTouchDist = 0;
-el.addEventListener(
-  'touchstart',
-  e => {
-    if (e.touches.length === 1) {
-      ctrl.dragging = true;
-      ctrl.prev = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-    } else if (e.touches.length === 2) {
-      ctrl.dragging = false;
-      const dx = e.touches[0].clientX - e.touches[1].clientX;
-      const dy = e.touches[0].clientY - e.touches[1].clientY;
-      lastTouchDist = Math.sqrt(dx * dx + dy * dy);
-    }
-  },
-  { passive: true },
-);
-
-el.addEventListener(
-  'touchmove',
-  e => {
-    if (e.touches.length === 1 && ctrl.dragging) {
-      const dx = e.touches[0].clientX - ctrl.prev.x;
-      const dy = e.touches[0].clientY - ctrl.prev.y;
-      ctrl.prev = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-      ctrl.theta -= dx * 0.005;
-      ctrl.phi = Math.max(
-        0.05,
-        Math.min(Math.PI * 0.49, ctrl.phi + dy * 0.005),
-      );
-      syncCamera();
-    } else if (e.touches.length === 2) {
-      const dx = e.touches[0].clientX - e.touches[1].clientX;
-      const dy = e.touches[0].clientY - e.touches[1].clientY;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      ctrl.radius = Math.max(
-        60,
-        Math.min(4000, ctrl.radius - (dist - lastTouchDist) * 2),
-      );
-      lastTouchDist = dist;
-      syncCamera();
-    }
-  },
-  { passive: true },
-);
-
-el.addEventListener('touchend', () => {
-  ctrl.dragging = false;
-});
+// Initial camera position — elevated angle showing depth like Skyline
+camera.position.set(-400, PLATFORM_Y + 600, 1100);
+controls.update();
 
 // ═══════════════════════════════════════════════
 // RESIZE
@@ -1154,11 +854,13 @@ function animate() {
   requestAnimationFrame(animate);
   const dt = clock.getDelta();
 
+  controls.update(); // smooth damping
+
   // Animate racing dot
   racerT = (racerT + dt * 0.035) % 1;
   const rPos = curve.getPointAt(racerT);
-  racer.position.set(rPos.x, 3, rPos.z);
-  trailGlow.position.set(rPos.x, 3, rPos.z);
+  racer.position.set(rPos.x, PLATFORM_Y + 3, rPos.z);
+  trailGlow.position.set(rPos.x, PLATFORM_Y + 3, rPos.z);
 
   // Pulse the racer glow
   const pulse = 0.7 + Math.sin(clock.elapsedTime * 4) * 0.3;
