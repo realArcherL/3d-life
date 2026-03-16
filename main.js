@@ -127,6 +127,103 @@ const TURN_LABELS = [
 ];
 
 // ═══════════════════════════════════════════════
+// GRANDSTANDS DATA
+// Traced via draw-track.html — paste exported STANDS_DATA here.
+// { name, cx, cz, width(m), depth(m), angle(rad), height(m) }
+// angle = atan2(dz, dx) of the front edge (track-facing face)
+// ═══════════════════════════════════════════════
+const STANDS_DATA = [
+  // ── S/F Straight — main grandstand (right-hand side of start/finish)
+  {
+    name: 'Main Grandstand',
+    cx: 125.7,
+    cz: -156.0,
+    width: 21.2,
+    depth: 211.5,
+    angle: -1.0392,
+    height: 24,
+  },
+
+  // ── T1 approach — stand on inside of long straight
+  {
+    name: 'T1 Stand',
+    cx: 364.1,
+    cz: -8.1,
+    width: 23.2,
+    depth: 153.1,
+    angle: -0.9829,
+    height: 18,
+  },
+
+  // ── T16 complex — three stepped stands wrapping the high-speed left-handers
+  {
+    name: 'T16 North Stand',
+    cx: -634.4,
+    cz: 65.0,
+    width: 37.9,
+    depth: 62.7,
+    angle: 0.5527,
+    height: 16,
+  },
+  {
+    name: 'T16 Centre Stand',
+    cx: -654.7,
+    cz: 138.3,
+    width: 40.8,
+    depth: 63.0,
+    angle: 0.0263,
+    height: 16,
+  },
+  {
+    name: 'T16 South Stand',
+    cx: -645.3,
+    cz: 210.9,
+    width: 38.2,
+    depth: 59.1,
+    angle: -0.3441,
+    height: 16,
+  },
+
+  // ── T19 / Hard Rock Beach Club — four-stand complex on the NE side
+  {
+    name: 'Hard Rock Stand A',
+    cx: 818.5,
+    cz: 128.5,
+    width: 28.7,
+    depth: 79.3,
+    angle: 0.905,
+    height: 20,
+  },
+  {
+    name: 'Hard Rock Stand B',
+    cx: 745.2,
+    cz: 33.5,
+    width: 35.4,
+    depth: 74.7,
+    angle: 0.0,
+    height: 20,
+  },
+  {
+    name: 'Hard Rock Stand C',
+    cx: 750.0,
+    cz: -34.7,
+    width: 34.5,
+    depth: 39.0,
+    angle: 0.3661,
+    height: 18,
+  },
+  {
+    name: 'NE Hairpin Stand',
+    cx: 800.2,
+    cz: -74.6,
+    width: 30.6,
+    depth: 70.5,
+    angle: -1.948,
+    height: 15,
+  },
+];
+
+// ═══════════════════════════════════════════════
 // SCENE
 // ═══════════════════════════════════════════════
 const scene = new THREE.Scene();
@@ -207,102 +304,6 @@ function buildGrid() {
   return group;
 }
 scene.add(buildGrid());
-
-// ═══════════════════════════════════════════════
-// STADIUM (glowing wireframe block)
-// ═══════════════════════════════════════════════
-function buildStadium() {
-  const g = new THREE.Group();
-
-  // Solid dark base
-  const baseGeo = new THREE.BoxGeometry(260, 35, 220);
-  const baseMat = new THREE.MeshStandardMaterial({
-    color: 0x050a0d,
-    roughness: 0.8,
-    metalness: 0.2,
-  });
-  const base = new THREE.Mesh(baseGeo, baseMat);
-  base.position.y = 17;
-  g.add(base);
-
-  // Wireframe glow
-  const wireGeo = new THREE.BoxGeometry(262, 36, 222);
-  const wireMat = new THREE.MeshBasicMaterial({
-    color: TRON.cyan,
-    wireframe: true,
-    transparent: true,
-    opacity: 0.12,
-  });
-  g.add(new THREE.Mesh(wireGeo, wireMat).translateY(17));
-
-  // Roof edge glow
-  const roofGeo = new THREE.BoxGeometry(280, 2, 240);
-  const roofMat = new THREE.MeshBasicMaterial({
-    color: TRON.cyan,
-    transparent: true,
-    opacity: 0.08,
-  });
-  const roof = new THREE.Mesh(roofGeo, roofMat);
-  roof.position.y = 40;
-  g.add(roof);
-
-  // Edge lines on roof
-  const edgesGeo = new THREE.EdgesGeometry(roofGeo);
-  const edgesMat = new THREE.LineBasicMaterial({
-    color: TRON.cyan,
-    transparent: true,
-    opacity: 0.3,
-  });
-  const edges = new THREE.LineSegments(edgesGeo, edgesMat);
-  edges.position.y = 40;
-  g.add(edges);
-
-  // Pylons (4 corner supports)
-  const pylonGeo = new THREE.CylinderGeometry(2.5, 2.5, 50, 6);
-  const pylonMat = new THREE.MeshBasicMaterial({
-    color: TRON.cyan,
-    transparent: true,
-    opacity: 0.2,
-  });
-  [
-    [-100, -80],
-    [100, -80],
-    [100, 80],
-    [-100, 80],
-  ].forEach(([px, pz]) => {
-    const p = new THREE.Mesh(pylonGeo, pylonMat);
-    p.position.set(px, 25, pz);
-    g.add(p);
-  });
-
-  // "HARD ROCK" text indicator — just a glowing plane
-  const labelGeo = new THREE.PlaneGeometry(100, 20);
-  const labelCanvas = document.createElement('canvas');
-  labelCanvas.width = 512;
-  labelCanvas.height = 128;
-  const lctx = labelCanvas.getContext('2d');
-  lctx.fillStyle = '#00f0ff';
-  lctx.font = 'bold 60px Orbitron, monospace';
-  lctx.textAlign = 'center';
-  lctx.textBaseline = 'middle';
-  lctx.fillText('HARD ROCK', 256, 64);
-  const labelTex = new THREE.CanvasTexture(labelCanvas);
-  const labelMat = new THREE.MeshBasicMaterial({
-    map: labelTex,
-    transparent: true,
-    opacity: 0.15,
-    side: THREE.DoubleSide,
-  });
-  const label = new THREE.Mesh(labelGeo, labelMat);
-  label.rotation.x = -Math.PI / 2;
-  label.position.y = 38;
-  g.add(label);
-
-  g.rotation.y = -0.08;
-  g.position.set(-10, 0, -80);
-  return g;
-}
-scene.add(buildStadium());
 
 // ═══════════════════════════════════════════════
 // TRACK CURVE
@@ -524,7 +525,126 @@ function buildWalls() {
 scene.add(buildWalls());
 
 // ═══════════════════════════════════════════════
-// START / FINISH LINE — neon chequered
+// GRANDSTANDS
+// ═══════════════════════════════════════════════
+function buildStand({ name, cx, cz, width, depth, angle, height }) {
+  const g = new THREE.Group();
+  g.position.set(cx, 0, cz);
+  // -angle because Three.js Y-rotation is CW from above while atan2 gives CCW
+  g.rotation.y = -angle;
+
+  const N_TIERS = 4;
+  const tierW = width;
+  const tierD = depth / N_TIERS;
+  const tierH = height / N_TIERS;
+
+  for (let i = 0; i < N_TIERS; i++) {
+    // Each tier steps back (larger z) and up (larger y)
+    const yMid = (i + 0.5) * tierH;
+    const zMid = -depth / 2 + (i + 0.5) * tierD;
+
+    // Dark concrete slab
+    const geo = new THREE.BoxGeometry(tierW, tierH, tierD);
+    const mesh = new THREE.Mesh(
+      geo,
+      new THREE.MeshStandardMaterial({
+        color: 0x040810,
+        roughness: 0.9,
+        metalness: 0.15,
+      }),
+    );
+    mesh.position.set(0, yMid, zMid);
+    g.add(mesh);
+
+    // Glowing wireframe (brighten on higher tiers)
+    const edgeMesh = new THREE.LineSegments(
+      new THREE.EdgesGeometry(geo),
+      new THREE.LineBasicMaterial({
+        color: TRON.cyan,
+        transparent: true,
+        opacity: 0.1 + i * 0.04,
+      }),
+    );
+    edgeMesh.position.copy(mesh.position);
+    g.add(edgeMesh);
+  }
+
+  // ─ Bright neon front edge (track-facing bottom) ─
+  const addLine = (pts, opacity) => {
+    g.add(
+      new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints(pts),
+        new THREE.LineBasicMaterial({
+          color: TRON.cyan,
+          transparent: true,
+          opacity,
+        }),
+      ),
+    );
+  };
+
+  const hw = width / 2,
+    hd = depth / 2;
+  addLine(
+    [new THREE.Vector3(-hw, 0, -hd), new THREE.Vector3(hw, 0, -hd)],
+    0.65,
+  );
+  // Top-back ridge
+  addLine(
+    [new THREE.Vector3(-hw, height, hd), new THREE.Vector3(hw, height, hd)],
+    0.3,
+  );
+  // Side profiles
+  addLine(
+    [new THREE.Vector3(-hw, 0, -hd), new THREE.Vector3(-hw, height, hd)],
+    0.35,
+  );
+  addLine(
+    [new THREE.Vector3(hw, 0, -hd), new THREE.Vector3(hw, height, hd)],
+    0.35,
+  );
+
+  // Vertical columns every ~25 m
+  const nCols = Math.max(2, Math.round(width / 25));
+  for (let i = 1; i < nCols; i++) {
+    const xPos = -hw + (width / nCols) * i;
+    addLine(
+      [new THREE.Vector3(xPos, 0, -hd), new THREE.Vector3(xPos, height, hd)],
+      0.12,
+    );
+  }
+
+  // ── Name label floating above the stand ──
+  const labelCanvas = document.createElement('canvas');
+  labelCanvas.width = 512;
+  labelCanvas.height = 64;
+  const lctx = labelCanvas.getContext('2d');
+  lctx.fillStyle = 'rgba(0,240,255,0.85)';
+  lctx.font = 'bold 28px Orbitron, monospace';
+  lctx.textAlign = 'center';
+  lctx.textBaseline = 'middle';
+  lctx.fillText(name, 256, 32);
+  const labelSprite = new THREE.Sprite(
+    new THREE.SpriteMaterial({
+      map: new THREE.CanvasTexture(labelCanvas),
+      depthTest: false,
+      transparent: true,
+      opacity: 0.7,
+    }),
+  );
+  labelSprite.scale.set(60, 8, 1);
+  labelSprite.position.set(0, height + 10, 0);
+  g.add(labelSprite);
+
+  return g;
+}
+
+function buildStands() {
+  const g = new THREE.Group();
+  STANDS_DATA.forEach(s => g.add(buildStand(s)));
+  return g;
+}
+scene.add(buildStands());
 // ═══════════════════════════════════════════════
 function buildStartFinish() {
   const canvas = document.createElement('canvas');
