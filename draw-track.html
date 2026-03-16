@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Miami GP Track Tracer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #map {
+            width: 100%;
+            height: 100vh;
+        }
+
+        #toolbar {
+            position: fixed;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            background: rgba(10, 10, 10, 0.92);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 10px 16px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        #toolbar button {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            padding: 8px 14px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        #toolbar button:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        #toolbar button.active {
+            background: #e10600;
+            border-color: #e10600;
+        }
+
+        #toolbar button.export-btn {
+            background: #0a8f3c;
+            border-color: #0a8f3c;
+        }
+
+        #toolbar button.export-btn:hover {
+            background: #0cb34d;
+        }
+
+        #point-count {
+            font-size: 12px;
+            color: #999;
+            letter-spacing: 0.5px;
+            padding: 0 6px;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        #sidebar {
+            position: fixed;
+            right: 0;
+            top: 0;
+            width: 340px;
+            height: 100vh;
+            z-index: 1000;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(12px);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #sidebar.open {
+            transform: translateX(0);
+        }
+
+        #sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #sidebar-header h3 {
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        #sidebar-header button {
+            background: none;
+            border: none;
+            color: #999;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        #coord-output {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 11px;
+            color: #0f0;
+            background: #050505;
+            white-space: pre;
+            line-height: 1.6;
+            user-select: all;
+        }
+
+        #sidebar-actions {
+            padding: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            gap: 8px;
+        }
+
+        #sidebar-actions button {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        #sidebar-actions button:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        #sidebar-actions .copy-btn {
+            background: #0a8f3c;
+            border-color: #0a8f3c;
+        }
+
+        #instructions {
+            position: fixed;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            background: rgba(10, 10, 10, 0.85);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-size: 12px;
+            color: #888;
+            text-align: center;
+            transition: opacity 0.5s;
+        }
+
+        .leaflet-container {
+            background: #111 !important;
+            cursor: crosshair !important;
+        }
+
+        /* custom point markers */
+        .trace-marker {
+            width: 12px !important;
+            height: 12px !important;
+            background: #e10600;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            margin-left: -6px !important;
+            margin-top: -6px !important;
+            cursor: grab !important;
+            box-shadow: 0 0 6px rgba(225, 6, 0, 0.6);
+            transition: transform 0.1s;
+        }
+
+        .trace-marker:hover {
+            transform: scale(1.4);
+        }
+
+        .trace-marker.first-point {
+            background: #00cc44;
+            box-shadow: 0 0 8px rgba(0, 204, 68, 0.6);
+        }
+
+        .point-label {
+            font-size: 9px !important;
+            font-weight: 700;
+            color: #fff !important;
+            background: rgba(0, 0, 0, 0.7) !important;
+            border: none !important;
+            padding: 1px 4px !important;
+            border-radius: 3px;
+            box-shadow: none !important;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="toolbar">
+        <button id="btn-draw" class="active" title="Click on map to add points">&#9998; Draw</button>
+        <button id="btn-undo" title="Remove last point">&#8630; Undo</button>
+        <button id="btn-close-loop" title="Close the loop back to first point">&#10227; Close Loop</button>
+        <button id="btn-clear" title="Clear all points">&#10005; Clear</button>
+        <span id="point-count">0 points</span>
+        <button id="btn-export" class="export-btn" title="Show exportable coordinates">&#10148; Export</button>
+    </div>
+
+    <div id="map"></div>
+
+    <div id="sidebar">
+        <div id="sidebar-header">
+            <h3>Traced Coordinates</h3>
+            <button id="btn-close-sidebar">&times;</button>
+        </div>
+        <div id="coord-output"></div>
+        <div id="sidebar-actions">
+            <button class="copy-btn" id="btn-copy">Copy to Clipboard</button>
+            <button id="btn-download">Download JSON</button>
+        </div>
+    </div>
+
+    <div id="instructions">
+        Click on the map to place track points &bull; Drag markers to adjust &bull; Close the loop when done &bull;
+        Export to get coordinates
+    </div>
+
+    <script>
+        (function () {
+            // ── Map setup centred on Hard Rock Stadium ──
+            const CENTER = [25.9581, -80.2389];
+            const map = L.map('map', {
+                center: CENTER,
+                zoom: 17,
+                zoomControl: false,
+                attributionControl: true
+            });
+
+            // Esri World Imagery (free satellite tiles)
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                maxZoom: 20,
+                attribution: '&copy; Esri, Maxar, Earthstar Geographics'
+            }).addTo(map);
+
+            // Optional: add street labels on top for reference
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}', {
+                maxZoom: 20,
+                opacity: 0.35
+            }).addTo(map);
+
+            L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+            // ── State ──
+            let points = [];       // [{lat, lng, marker, label}]
+            let polyline = null;
+            let isDrawing = true;
+            let isClosed = false;
+
+            const btnDraw = document.getElementById('btn-draw');
+            const btnUndo = document.getElementById('btn-undo');
+            const btnCloseLoop = document.getElementById('btn-close-loop');
+            const btnClear = document.getElementById('btn-clear');
+            const btnExport = document.getElementById('btn-export');
+            const pointCount = document.getElementById('point-count');
+            const sidebar = document.getElementById('sidebar');
+            const coordOutput = document.getElementById('coord-output');
+            const instructions = document.getElementById('instructions');
+
+            // ── Drawing ──
+            function updatePolyline() {
+                const latlngs = points.map(p => [p.lat, p.lng]);
+                if (isClosed && latlngs.length > 0) {
+                    latlngs.push(latlngs[0]);
+                }
+                if (polyline) map.removeLayer(polyline);
+                polyline = L.polyline(latlngs, {
+                    color: '#e10600', weight: 3, opacity: 0.9,
+                    dashArray: isClosed ? null : '8, 6'
+                }).addTo(map);
+                pointCount.textContent = `${points.length} point${points.length !== 1 ? 's' : ''}`;
+            }
+
+            function addPoint(lat, lng) {
+                if (!isDrawing || isClosed) return;
+
+                const idx = points.length;
+                const icon = L.divIcon({
+                    className: `trace-marker ${idx === 0 ? 'first-point' : ''}`,
+                    iconSize: [12, 12]
+                });
+
+                const marker = L.marker([lat, lng], {
+                    icon, draggable: true, zIndexOffset: 1000
+                }).addTo(map);
+
+                const label = L.tooltip({
+                    permanent: true, direction: 'right', offset: [10, 0],
+                    className: 'point-label'
+                });
+                marker.bindTooltip(label).setTooltipContent(`${idx}`);
+
+                marker.on('drag', function () {
+                    const pos = marker.getLatLng();
+                    points[idx].lat = pos.lat;
+                    points[idx].lng = pos.lng;
+                    updatePolyline();
+                });
+
+                // Right-click to delete a point
+                marker.on('contextmenu', function (e) {
+                    L.DomEvent.stopPropagation(e);
+                    removePoint(idx);
+                });
+
+                points.push({ lat, lng, marker, label });
+                updatePolyline();
+
+                // Fade instructions after a few points
+                if (points.length > 3) {
+                    instructions.style.opacity = '0';
+                    setTimeout(() => instructions.style.display = 'none', 500);
+                }
+            }
+
+            function removePoint(idx) {
+                if (idx < 0 || idx >= points.length) return;
+                map.removeLayer(points[idx].marker);
+                points.splice(idx, 1);
+                isClosed = false;
+                // Re-index labels
+                points.forEach((p, i) => {
+                    p.marker.setTooltipContent(`${i}`);
+                    const icon = L.divIcon({
+                        className: `trace-marker ${i === 0 ? 'first-point' : ''}`,
+                        iconSize: [12, 12]
+                    });
+                    p.marker.setIcon(icon);
+                });
+                updatePolyline();
+            }
+
+            map.on('click', function (e) {
+                if (!isDrawing) return;
+                addPoint(e.latlng.lat, e.latlng.lng);
+            });
+
+            // ── Toolbar actions ──
+            btnDraw.addEventListener('click', () => {
+                isDrawing = !isDrawing;
+                btnDraw.classList.toggle('active', isDrawing);
+                map.getContainer().style.cursor = isDrawing ? 'crosshair' : 'grab';
+            });
+
+            btnUndo.addEventListener('click', () => {
+                if (points.length === 0) return;
+                isClosed = false;
+                removePoint(points.length - 1);
+            });
+
+            btnCloseLoop.addEventListener('click', () => {
+                if (points.length < 3) return;
+                isClosed = true;
+                updatePolyline();
+            });
+
+            btnClear.addEventListener('click', () => {
+                if (points.length === 0) return;
+                if (!confirm('Clear all traced points?')) return;
+                points.forEach(p => map.removeLayer(p.marker));
+                points = [];
+                isClosed = false;
+                updatePolyline();
+                instructions.style.display = 'block';
+                instructions.style.opacity = '1';
+            });
+
+            // ── Export ──
+            function generateExport() {
+                if (points.length === 0) return '// No points traced yet';
+
+                const gps = points.map((p, i) =>
+                    `  [${p.lat.toFixed(7)}, ${p.lng.toFixed(7)}]${i < points.length - 1 ? ',' : ''}`
+                );
+
+                // Also generate local metre coords for Three.js
+                const CENTER_LAT = 25.9581;
+                const CENTER_LON = -80.2389;
+                const M_LAT = 111320;
+                const M_LON = 111320 * Math.cos(CENTER_LAT * Math.PI / 180);
+
+                const local = points.map((p, i) => {
+                    const x = ((p.lng - CENTER_LON) * M_LON).toFixed(1);
+                    const z = (-(p.lat - CENTER_LAT) * M_LAT).toFixed(1);
+                    return `  [${x}, ${z}]${i < points.length - 1 ? ',' : ''}`;
+                });
+
+                return [
+                    `// ── Miami GP Track Trace ──`,
+                    `// ${points.length} points | closed: ${isClosed}`,
+                    `// Traced: ${new Date().toISOString()}`,
+                    ``,
+                    `// GPS coordinates [lat, lng]`,
+                    `const GPS_POINTS = [`,
+                    ...gps,
+                    `];`,
+                    ``,
+                    `// Three.js local coords [x, z] (metres from stadium centre)`,
+                    `// x → East, z → South`,
+                    `const TRACK_POINTS = [`,
+                    ...local,
+                    `];`,
+                    ``,
+                    `// closed: ${isClosed}`
+                ].join('\n');
+            }
+
+            btnExport.addEventListener('click', () => {
+                coordOutput.textContent = generateExport();
+                sidebar.classList.add('open');
+            });
+
+            document.getElementById('btn-close-sidebar').addEventListener('click', () => {
+                sidebar.classList.remove('open');
+            });
+
+            document.getElementById('btn-copy').addEventListener('click', () => {
+                const text = generateExport();
+                navigator.clipboard.writeText(text).then(() => {
+                    const btn = document.getElementById('btn-copy');
+                    btn.textContent = 'Copied!';
+                    setTimeout(() => btn.textContent = 'Copy to Clipboard', 1500);
+                });
+            });
+
+            document.getElementById('btn-download').addEventListener('click', () => {
+                const text = generateExport();
+                const blob = new Blob([text], { type: 'text/javascript' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'miami-track-trace.js';
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+
+            // ── Keyboard shortcuts ──
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'z' && (e.ctrlKey || e.metaKey)) {
+                    e.preventDefault();
+                    btnUndo.click();
+                }
+                if (e.key === 'Escape') {
+                    sidebar.classList.remove('open');
+                }
+            });
+
+        })();
+    </script>
+</body>
+
+</html>
