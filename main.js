@@ -430,25 +430,7 @@ function getNormal(t) {
   return new THREE.Vector3(-tang.z, 0, tang.x);
 }
 
-// ─── Dark asphalt surface ───
-const trackShape = new THREE.Shape();
-trackShape.moveTo(-TRACK_HALF, -0.1);
-trackShape.lineTo(TRACK_HALF, -0.1);
-trackShape.lineTo(TRACK_HALF, 0.1);
-trackShape.lineTo(-TRACK_HALF, 0.1);
-trackShape.closePath();
-
-const trackGeo = new THREE.ExtrudeGeometry(trackShape, {
-  steps: N_SEG,
-  extrudePath: curve,
-  bevelEnabled: false,
-});
-const trackMat = new THREE.MeshStandardMaterial({
-  color: TRON.asphalt,
-  roughness: 0.9,
-  metalness: 0.05,
-});
-scene.add(new THREE.Mesh(trackGeo, trackMat));
+// (Asphalt strip removed — track defined by neon edge lines)
 
 // ═══════════════════════════════════════════════
 // NEON EDGE LINES (the TRON signature look)
@@ -906,16 +888,91 @@ window.addEventListener('keydown', e => {
 });
 
 // ═══════════════════════════════════════════════
-// ANIMATED PARTICLE (simple racing ball along track)
+// ANIMATED PARTICLE — racing ball + glow + trail
 // ═══════════════════════════════════════════════
 const racerGeo = new THREE.SphereGeometry(4, 24, 24);
-const racerMat = new THREE.MeshBasicMaterial({
-  color: TRON.cyan,
-});
+const racerMat = new THREE.MeshBasicMaterial({ color: TRON.cyan });
 const racer = new THREE.Mesh(racerGeo, racerMat);
 scene.add(racer);
 
+// Subtle point light on ball for TRON glow on nearby edges/kerbs
+const racerLight = new THREE.PointLight(TRON.cyan, 1.5, 80);
+racerLight.position.set(0, 2, 0);
+racer.add(racerLight);
+
 let racerT = 0;
+
+// ─── Pre-compute curvature for speed modulation ───
+const CURV_N = 2000;
+const curvatureMap = new Float32Array(CURV_N);
+const CURV_EPS = 0.0005;
+for (let i = 0; i < CURV_N; i++) {
+  const t = i / CURV_N;
+  const t1 = (((t - CURV_EPS) % 1) + 1) % 1;
+  const t2 = (t + CURV_EPS) % 1;
+  const tang1 = curve.getTangentAt(t1);
+  const tang2 = curve.getTangentAt(t2);
+  curvatureMap[i] = tang1.angleTo(tang2) / (2 * CURV_EPS);
+}
+// Smooth the curvature map (3-pass box blur, kernel 31) to remove noise
+for (let pass = 0; pass < 3; pass++) {
+  const tmp = new Float32Array(CURV_N);
+  const K = 15; // half-kernel
+  for (let i = 0; i < CURV_N; i++) {
+    let sum = 0;
+    for (let j = -K; j <= K; j++)
+      sum += curvatureMap[(((i + j) % CURV_N) + CURV_N) % CURV_N];
+    tmp[i] = sum / (2 * K + 1);
+  }
+  curvatureMap.set(tmp);
+}
+const BASE_SPEED = 0.035;
+const MIN_SPEED_FACTOR = 0.28;
+// Interpolated curvature lookup (no bin-snapping jitter)
+function getCurvature(t) {
+  const nt = ((t % 1) + 1) % 1;
+  const fi = nt * CURV_N;
+  const i0 = Math.floor(fi) % CURV_N;
+  const i1 = (i0 + 1) % CURV_N;
+  const frac = fi - Math.floor(fi);
+  return curvatureMap[i0] * (1 - frac) + curvatureMap[i1] * frac;
+}
+function getTargetSpeedFactor(t) {
+  const k = getCurvature(t);
+  const f = 1 / (1 + k * 0.8);
+  return Math.max(MIN_SPEED_FACTOR, f);
+}
+// Smoothed live speed (lerped to avoid instant jumps)
+let liveSpeedFactor = 1;
+
+// ─── Glowing trail behind the ball (TRON light-cycle style) ───
+const TRAIL_LEN = 50;
+const TRAIL_STEP = 0.0012; // how far behind each trail point is in t-space
+const trailPositions = new Float32Array(TRAIL_LEN * 3);
+const trailColors = new Float32Array(TRAIL_LEN * 3);
+for (let i = 0; i < TRAIL_LEN; i++) {
+  const fade = 1 - i / TRAIL_LEN;
+  // Cyan fading to black (matches dark background)
+  trailColors[i * 3] = 0.0 * fade; // R
+  trailColors[i * 3 + 1] = 0.94 * fade; // G
+  trailColors[i * 3 + 2] = 1.0 * fade; // B
+}
+const trailGeo = new THREE.BufferGeometry();
+trailGeo.setAttribute(
+  'position',
+  new THREE.Float32BufferAttribute(trailPositions, 3),
+);
+trailGeo.setAttribute(
+  'color',
+  new THREE.Float32BufferAttribute(trailColors, 3),
+);
+const trailMat = new THREE.LineBasicMaterial({
+  vertexColors: true,
+  transparent: true,
+  opacity: 0.7,
+});
+const trailLine = new THREE.Line(trailGeo, trailMat);
+scene.add(trailLine);
 
 // ═══════════════════════════════════════════════
 // CAMERA — OrbitControls (Skyline-style smooth orbit)
@@ -1004,10 +1061,23 @@ function animate() {
   requestAnimationFrame(animate);
   const dt = clock.getDelta();
 
-  // Animate racing ball (simple, no pulsing)
-  racerT = (racerT + dt * 0.035) % 1;
+  // Animate racing ball — smooth speed transitions
+  const targetSF = getTargetSpeedFactor(racerT);
+  const speedLerp = 1 - Math.exp(-4.0 * dt); // smooth ramp
+  liveSpeedFactor += (targetSF - liveSpeedFactor) * speedLerp;
+  racerT = (racerT + dt * BASE_SPEED * liveSpeedFactor) % 1;
   const rPos = curve.getPointAt(racerT);
   racer.position.set(rPos.x, PLATFORM_Y + 4, rPos.z);
+
+  // Update trailing glow line
+  for (let i = 0; i < TRAIL_LEN; i++) {
+    const tt = (((racerT - i * TRAIL_STEP) % 1) + 1) % 1;
+    const tp = curve.getPointAt(tt);
+    trailPositions[i * 3] = tp.x;
+    trailPositions[i * 3 + 1] = PLATFORM_Y + 2;
+    trailPositions[i * 3 + 2] = tp.z;
+  }
+  trailGeo.attributes.position.needsUpdate = true;
 
   if (cameraMode === 'follow') {
     // Get tangent to look ahead
