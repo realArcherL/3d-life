@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Miami GP Track Tracer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #map {
+            width: 100%;
+            height: 100vh;
+        }
+
+        #toolbar {
+            position: fixed;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            background: rgba(10, 10, 10, 0.92);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 10px 16px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        #toolbar button {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            padding: 8px 14px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        #toolbar button:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        #toolbar button.active {
+            background: #e10600;
+            border-color: #e10600;
+        }
+
+        #toolbar button.export-btn {
+            background: #0a8f3c;
+            border-color: #0a8f3c;
+        }
+
+        #toolbar button.export-btn:hover {
+            background: #0cb34d;
+        }
+
+        #point-count {
+            font-size: 12px;
+            color: #999;
+            letter-spacing: 0.5px;
+            padding: 0 6px;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        #sidebar {
+            position: fixed;
+            right: 0;
+            top: 0;
+            width: 340px;
+            height: 100vh;
+            z-index: 1000;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(12px);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #sidebar.open {
+            transform: translateX(0);
+        }
+
+        #sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #sidebar-header h3 {
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        #sidebar-header button {
+            background: none;
+            border: none;
+            color: #999;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        #coord-output {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 11px;
+            color: #0f0;
+            background: #050505;
+            white-space: pre;
+            line-height: 1.6;
+            user-select: all;
+        }
+
+        #sidebar-actions {
+            padding: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            gap: 8px;
+        }
+
+        #sidebar-actions button {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        #sidebar-actions button:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        #sidebar-actions .copy-btn {
+            background: #0a8f3c;
+            border-color: #0a8f3c;
+        }
+
+        #instructions {
+            position: fixed;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            background: rgba(10, 10, 10, 0.85);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-size: 12px;
+            color: #888;
+            text-align: center;
+            transition: opacity 0.5s;
+        }
+
+        .leaflet-container {
+            background: #111 !important;
+            cursor: crosshair !important;
+        }
+
+        /* custom point markers */
+        .trace-marker {
+            width: 12px !important;
+            height: 12px !important;
+            background: #e10600;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            margin-left: -6px !important;
+            margin-top: -6px !important;
+            cursor: grab !important;
+            box-shadow: 0 0 6px rgba(225, 6, 0, 0.6);
+            transition: transform 0.1s;
+        }
+
+        .trace-marker:hover {
+            transform: scale(1.4);
+        }
+
+        .trace-marker.first-point {
+            background: #00cc44;
+            box-shadow: 0 0 8px rgba(0, 204, 68, 0.6);
+        }
+
+        #btn-stands.active {
+            background: #006faa;
+            border-color: #00aaff;
+        }
+
+        #stand-count {
+            font-size: 12px;
+            color: #00aaff;
+            letter-spacing: 0.5px;
+            padding: 0 6px;
+            min-width: 64px;
+            text-align: center;
+        }
+
+        .stand-marker {
+            width: 10px !important;
+            height: 10px !important;
+            background: #00aaff;
+            border: 2px solid #fff;
+            border-radius: 2px;
+            margin-left: -5px !important;
+            margin-top: -5px !important;
+            cursor: crosshair !important;
+            box-shadow: 0 0 7px rgba(0,170,255,0.8);
+        }
+
+        .stand-marker.stand-p1 {
+            background: #00eeff;
+            border-radius: 50%;
+        }
+
+        .point-label {
+            font-size: 9px !important;
+            font-weight: 700;
+            color: #fff !important;
+            background: rgba(0, 0, 0, 0.7) !important;
+            border: none !important;
+            padding: 1px 4px !important;
+            border-radius: 3px;
+            box-shadow: none !important;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="toolbar">
+        <button id="btn-draw" class="active" title="Click on map to add points">&#9998; Draw</button>
+        <button id="btn-undo" title="Remove last point">&#8630; Undo</button>
+        <button id="btn-close-loop" title="Close the loop back to first point">&#10227; Close Loop</button>
+        <button id="btn-clear" title="Clear all points">&#10005; Clear</button>
+        <span id="point-count">0 points</span>
+        <div style="width:1px;background:rgba(255,255,255,0.12);height:22px;"></div>
+        <button id="btn-stands" title="Draw grandstands — 3 clicks: edge start → edge end → depth">🏟 Stands</button>
+        <span id="stand-count">0 stands</span>
+        <button id="btn-undo-stand" title="Remove last stand">&#8630; Undo Stand</button>
+        <div style="width:1px;background:rgba(255,255,255,0.12);height:22px;"></div>
+        <button id="btn-export" class="export-btn" title="Show exportable coordinates">&#10148; Export</button>
+    </div>
+
+    <div id="map"></div>
+
+    <div id="sidebar">
+        <div id="sidebar-header">
+            <h3>Traced Coordinates</h3>
+            <button id="btn-close-sidebar">&times;</button>
+        </div>
+        <div id="coord-output"></div>
+        <div id="sidebar-actions">
+            <button class="copy-btn" id="btn-copy">Copy to Clipboard</button>
+            <button id="btn-download">Download JSON</button>
+        </div>
+    </div>
+
+    <div id="instructions">
+        Click on the map to place track points &bull; Drag markers to adjust &bull; Close the loop when done &bull;
+        Export to get coordinates
+    </div>
+
+    <script>
+        (function () {
+            // ── Map setup centred on Hard Rock Stadium ──
+            const CENTER = [25.9581, -80.2389];
+            const map = L.map('map', {
+                center: CENTER,
+                zoom: 17,
+                zoomControl: false,
+                attributionControl: true
+            });
+
+            // Esri World Imagery (free satellite tiles)
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                maxZoom: 20,
+                attribution: '&copy; Esri, Maxar, Earthstar Geographics'
+            }).addTo(map);
+
+            // Optional: add street labels on top for reference
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}', {
+                maxZoom: 20,
+                opacity: 0.35
+            }).addTo(map);
+
+            L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+            // ── Coordinate helpers (shared by track export & stands) ──
+            const CENTER_LAT = 25.9581;
+            const CENTER_LON = -80.2389;
+            const M_LAT = 111320;
+            const M_LON = 111320 * Math.cos(CENTER_LAT * Math.PI / 180);
+
+            function toLocal(lat, lng) {
+                return [(lng - CENTER_LON) * M_LON, -(lat - CENTER_LAT) * M_LAT];
+            }
+            function toLatLng(x, z) {
+                return [CENTER_LAT - z / M_LAT, CENTER_LON + x / M_LON];
+            }
+
+            // ── Track state ──
+            let points = [];       // [{lat, lng, marker, label}]
+            let polyline = null;
+            let isDrawing = true;
+            let isClosed = false;
+
+            // ── Stands state ──
+            let standsMode = false;
+            let stands = [];            // finalized stand objects
+            let standPhase = 0;         // 0=idle, 1=p1 placed, 2=p2 placed
+            let standPts = [];          // in-progress [lat,lng] clicks (max 2)
+            let standTempMarkers = [];
+            let standPreview = null;
+
+            const btnDraw = document.getElementById('btn-draw');
+            const btnUndo = document.getElementById('btn-undo');
+            const btnCloseLoop = document.getElementById('btn-close-loop');
+            const btnClear = document.getElementById('btn-clear');
+            const btnExport = document.getElementById('btn-export');
+            const pointCount = document.getElementById('point-count');
+            const sidebar = document.getElementById('sidebar');
+            const coordOutput = document.getElementById('coord-output');
+            const instructions = document.getElementById('instructions');
+            const btnStands = document.getElementById('btn-stands');
+            const btnUndoStand = document.getElementById('btn-undo-stand');
+            const standCount = document.getElementById('stand-count');
+
+            // ── Drawing ──
+            function updatePolyline() {
+                const latlngs = points.map(p => [p.lat, p.lng]);
+                if (isClosed && latlngs.length > 0) {
+                    latlngs.push(latlngs[0]);
+                }
+                if (polyline) map.removeLayer(polyline);
+                polyline = L.polyline(latlngs, {
+                    color: '#e10600', weight: 3, opacity: 0.9,
+                    dashArray: isClosed ? null : '8, 6'
+                }).addTo(map);
+                pointCount.textContent = `${points.length} point${points.length !== 1 ? 's' : ''}`;
+            }
+
+            function addPoint(lat, lng) {
+                if (!isDrawing || isClosed) return;
+
+                const idx = points.length;
+                const icon = L.divIcon({
+                    className: `trace-marker ${idx === 0 ? 'first-point' : ''}`,
+                    iconSize: [12, 12]
+                });
+
+                const marker = L.marker([lat, lng], {
+                    icon, draggable: true, zIndexOffset: 1000
+                }).addTo(map);
+
+                const label = L.tooltip({
+                    permanent: true, direction: 'right', offset: [10, 0],
+                    className: 'point-label'
+                });
+                marker.bindTooltip(label).setTooltipContent(`${idx}`);
+
+                marker.on('drag', function () {
+                    const pos = marker.getLatLng();
+                    points[idx].lat = pos.lat;
+                    points[idx].lng = pos.lng;
+                    updatePolyline();
+                });
+
+                // Right-click to delete a point
+                marker.on('contextmenu', function (e) {
+                    L.DomEvent.stopPropagation(e);
+                    removePoint(idx);
+                });
+
+                points.push({ lat, lng, marker, label });
+                updatePolyline();
+
+                // Fade instructions after a few points
+                if (points.length > 3) {
+                    instructions.style.opacity = '0';
+                    setTimeout(() => instructions.style.display = 'none', 500);
+                }
+            }
+
+            function removePoint(idx) {
+                if (idx < 0 || idx >= points.length) return;
+                map.removeLayer(points[idx].marker);
+                points.splice(idx, 1);
+                isClosed = false;
+                // Re-index labels
+                points.forEach((p, i) => {
+                    p.marker.setTooltipContent(`${i}`);
+                    const icon = L.divIcon({
+                        className: `trace-marker ${i === 0 ? 'first-point' : ''}`,
+                        iconSize: [12, 12]
+                    });
+                    p.marker.setIcon(icon);
+                });
+                updatePolyline();
+            }
+
+            map.on('click', function (e) {
+                if (standsMode) { handleStandClick(e.latlng.lat, e.latlng.lng); return; }
+                if (!isDrawing) return;
+                addPoint(e.latlng.lat, e.latlng.lng);
+            });
+
+            map.on('mousemove', function (e) {
+                if (!standsMode || standPhase === 0) return;
+                updateStandPreview(e.latlng.lat, e.latlng.lng);
+            });
+
+            // ── Toolbar actions ──
+            btnDraw.addEventListener('click', () => {
+                isDrawing = !isDrawing;
+                btnDraw.classList.toggle('active', isDrawing);
+                map.getContainer().style.cursor = isDrawing ? 'crosshair' : 'grab';
+            });
+
+            btnUndo.addEventListener('click', () => {
+                if (points.length === 0) return;
+                isClosed = false;
+                removePoint(points.length - 1);
+            });
+
+            btnCloseLoop.addEventListener('click', () => {
+                if (points.length < 3) return;
+                isClosed = true;
+                updatePolyline();
+            });
+
+            btnClear.addEventListener('click', () => {
+                if (points.length === 0) return;
+                if (!confirm('Clear all traced points?')) return;
+                points.forEach(p => map.removeLayer(p.marker));
+                points = [];
+                isClosed = false;
+                updatePolyline();
+                instructions.style.display = 'block';
+                instructions.style.opacity = '1';
+            });
+
+            // ── Stands mode ──
+            function cancelInProgressStand() {
+                standTempMarkers.forEach(m => map.removeLayer(m));
+                standTempMarkers = [];
+                standPts = [];
+                standPhase = 0;
+                if (standPreview) { map.removeLayer(standPreview); standPreview = null; }
+            }
+
+            function handleStandClick(lat, lng) {
+                const icon = L.divIcon({
+                    className: `stand-marker${standPhase === 0 ? ' stand-p1' : ''}`,
+                    iconSize: [10, 10]
+                });
+                const marker = L.marker([lat, lng], { icon, zIndexOffset: 2000 }).addTo(map);
+                standTempMarkers.push(marker);
+                standPts.push([lat, lng]);
+                standPhase++;
+                if (standPhase === 3) finalizeStand(lat, lng);
+            }
+
+            function updateStandPreview(lat, lng) {
+                if (standPreview) map.removeLayer(standPreview);
+
+                if (standPhase === 1) {
+                    // Just a dashed line from p1 to cursor
+                    standPreview = L.polyline([standPts[0], [lat, lng]], {
+                        color: '#00aaff', weight: 2, dashArray: '7, 5', opacity: 0.75
+                    }).addTo(map);
+
+                } else if (standPhase === 2) {
+                    // Full rectangle preview
+                    const [x1, z1] = toLocal(standPts[0][0], standPts[0][1]);
+                    const [x2, z2] = toLocal(standPts[1][0], standPts[1][1]);
+                    const [mx, mz] = toLocal(lat, lng);
+                    const dx = x2 - x1, dz = z2 - z1;
+                    const len = Math.sqrt(dx * dx + dz * dz) || 1;
+                    const perpX = -dz / len, perpZ = dx / len;
+                    const depth = (mx - x1) * perpX + (mz - z1) * perpZ;
+                    const corners = [
+                        [x1, z1], [x2, z2],
+                        [x2 + perpX * depth, z2 + perpZ * depth],
+                        [x1 + perpX * depth, z1 + perpZ * depth]
+                    ].map(([x, z]) => toLatLng(x, z));
+                    standPreview = L.polygon(corners, {
+                        color: '#00aaff', weight: 2, dashArray: '7, 5',
+                        fillColor: '#00aaff', fillOpacity: 0.14
+                    }).addTo(map);
+                }
+            }
+
+            function finalizeStand() {
+                const [x1, z1] = toLocal(standPts[0][0], standPts[0][1]);
+                const [x2, z2] = toLocal(standPts[1][0], standPts[1][1]);
+                const [x3, z3] = toLocal(standPts[2][0], standPts[2][1]);
+
+                const dx = x2 - x1, dz = z2 - z1;
+                const len = Math.sqrt(dx * dx + dz * dz) || 1;
+                const perpX = -dz / len, perpZ = dx / len;
+                const depth = (x3 - x1) * perpX + (z3 - z1) * perpZ;
+                const cx = (x1 + x2) / 2 + perpX * depth / 2;
+                const cz = (z1 + z2) / 2 + perpZ * depth / 2;
+                const angle = Math.atan2(dz, dx);
+
+                // Remove temp markers + preview, draw solid polygon
+                if (standPreview) map.removeLayer(standPreview);
+                standTempMarkers.forEach(m => map.removeLayer(m));
+
+                const corners = [
+                    [x1, z1], [x2, z2],
+                    [x2 + perpX * depth, z2 + perpZ * depth],
+                    [x1 + perpX * depth, z1 + perpZ * depth]
+                ].map(([x, z]) => toLatLng(x, z));
+
+                const id = stands.length + 1;
+                const poly = L.polygon(corners, {
+                    color: '#00aaff', weight: 2,
+                    fillColor: '#00aaff', fillOpacity: 0.25
+                }).bindTooltip(`S${id}`, {
+                    permanent: true, direction: 'center', className: 'point-label'
+                }).addTo(map);
+
+                stands.push({
+                    id, name: `Stand ${id}`,
+                    cx: +cx.toFixed(1), cz: +cz.toFixed(1),
+                    width: +len.toFixed(1),
+                    depth: +Math.abs(depth).toFixed(1),
+                    angle: +angle.toFixed(4),
+                    height: 18,
+                    poly
+                });
+
+                standPts = [];
+                standTempMarkers = [];
+                standPreview = null;
+                standPhase = 0;
+                standCount.textContent = `${stands.length} stand${stands.length !== 1 ? 's' : ''}`;
+            }
+
+            btnStands.addEventListener('click', () => {
+                standsMode = !standsMode;
+                btnStands.classList.toggle('active', standsMode);
+                if (standsMode) {
+                    isDrawing = false;
+                    btnDraw.classList.remove('active');
+                    map.getContainer().style.cursor = 'crosshair';
+                    instructions.style.display = 'block';
+                    instructions.style.opacity = '1';
+                    instructions.innerHTML = '🏟 <b>Stands mode</b> &bull; Click 1: edge start &bull; Click 2: edge end &bull; Click 3: depth &bull; <kbd>Esc</kbd> cancel';
+                } else {
+                    cancelInProgressStand();
+                    map.getContainer().style.cursor = isDrawing ? 'crosshair' : 'grab';
+                    instructions.innerHTML = 'Click on the map to place track points &bull; Drag markers to adjust &bull; Close the loop when done &bull; Export to get coordinates';
+                }
+            });
+
+            btnUndoStand.addEventListener('click', () => {
+                if (standPhase > 0) {
+                    // Cancel the in-progress stand
+                    cancelInProgressStand();
+                } else if (stands.length > 0) {
+                    // Remove the last finalized stand
+                    const last = stands.pop();
+                    map.removeLayer(last.poly);
+                    standCount.textContent = `${stands.length} stand${stands.length !== 1 ? 's' : ''}`;
+                }
+            });
+
+            // ── Export ──
+            function generateExport() {
+                if (points.length === 0 && stands.length === 0) return '// Nothing traced yet';
+
+                const gps = points.map((p, i) =>
+                    `  [${p.lat.toFixed(7)}, ${p.lng.toFixed(7)}]${i < points.length - 1 ? ',' : ''}`
+                );
+
+                const local = points.map((p, i) => {
+                    const [x, z] = toLocal(p.lat, p.lng);
+                    return `  [${x.toFixed(1)}, ${z.toFixed(1)}]${i < points.length - 1 ? ',' : ''}`;
+                });
+
+                const standsOut = stands.length === 0
+                    ? '  // No stands traced yet'
+                    : stands.map(s =>
+                        `  { name: '${s.name}', cx: ${s.cx}, cz: ${s.cz}, width: ${s.width}, depth: ${s.depth}, angle: ${s.angle}, height: ${s.height} },`
+                    ).join('\n');
+
+                return [
+                    `// ── Miami GP Track & Stands Trace ──`,
+                    `// ${points.length} track points | closed: ${isClosed} | ${stands.length} stand(s)`,
+                    `// Traced: ${new Date().toISOString()}`,
+                    ``,
+                    `// GPS coordinates [lat, lng]`,
+                    `const GPS_POINTS = [`,
+                    ...gps,
+                    `];`,
+                    ``,
+                    `// Three.js local coords [x, z] (metres from stadium centre)`,
+                    `// x → East, z → South`,
+                    `const TRACK_POINTS = [`,
+                    ...local,
+                    `];`,
+                    ``,
+                    `// closed: ${isClosed}`,
+                    ``,
+                    `// ── Grandstands ── paste into main.js as STANDS_DATA ──`,
+                    `// { name, cx, cz, width(m), depth(m), angle(rad), height(m) }`,
+                    `const STANDS_DATA = [`,
+                    standsOut,
+                    `];`,
+                ].join('\n');
+            }
+
+            btnExport.addEventListener('click', () => {
+                coordOutput.textContent = generateExport();
+                sidebar.classList.add('open');
+            });
+
+            document.getElementById('btn-close-sidebar').addEventListener('click', () => {
+                sidebar.classList.remove('open');
+            });
+
+            document.getElementById('btn-copy').addEventListener('click', () => {
+                const text = generateExport();
+                navigator.clipboard.writeText(text).then(() => {
+                    const btn = document.getElementById('btn-copy');
+                    btn.textContent = 'Copied!';
+                    setTimeout(() => btn.textContent = 'Copy to Clipboard', 1500);
+                });
+            });
+
+            document.getElementById('btn-download').addEventListener('click', () => {
+                const text = generateExport();
+                const blob = new Blob([text], { type: 'text/javascript' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'miami-track-trace.js';
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+
+            // ── Keyboard shortcuts ──
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'z' && (e.ctrlKey || e.metaKey)) {
+                    e.preventDefault();
+                    btnUndo.click();
+                }
+                if (e.key === 'Escape') {
+                    sidebar.classList.remove('open');
+                    if (standsMode && standPhase > 0) cancelInProgressStand();
+                }
+            });
+
+        })();
+    </script>
+</body>
+
+</html>
