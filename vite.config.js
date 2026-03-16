@@ -1,5 +1,5 @@
-import { defineConfig } from 'vite'
-import { resolve } from 'path'
+import { defineConfig } from 'vite';
+import { resolve } from 'path';
 
 export default defineConfig({
   build: {
@@ -7,8 +7,8 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
-        drawTrack: resolve(__dirname, 'draw-track.html')
-      }
-    }
-  }
-})
+        drawTrack: resolve(__dirname, 'draw-track.html'),
+      },
+    },
+  },
+});

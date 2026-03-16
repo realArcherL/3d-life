@@ -89,6 +89,9 @@ const TRACK_POINTS = [
   [893.2, -125.9], // 42
   [910.4, -210.7], // 43
   [894.8, -224.7], // 44
+  [571.4, -237.3], // 44a — top straight ¼
+  [248.0, -250.0], // 44b — top straight ½
+  [-75.3, -262.6], // 44c — top straight ¾
   [-398.7, -275.2], // 45 Top straight
   [-410.1, -267.7], // 46
   [-405.6, -242.4], // 47
@@ -305,7 +308,7 @@ scene.add(buildStadium());
 // TRACK CURVE
 // ═══════════════════════════════════════════════
 const curvePoints = TRACK_POINTS.map(([x, z]) => new THREE.Vector3(x, 0, z));
-const curve = new THREE.CatmullRomCurve3(curvePoints, true, 'catmullrom', 0.25);
+const curve = new THREE.CatmullRomCurve3(curvePoints, true, 'centripetal', 0.5);
 
 const TRACK_WIDTH = 14;
 const TRACK_HALF = TRACK_WIDTH / 2;
