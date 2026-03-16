@@ -189,7 +189,7 @@
   <div id="stats">
     <div class="stat-row">Length <span class="stat-val">5.412 km</span></div>
     <div class="stat-row">Turns <span class="stat-val">19</span></div>
-    <div class="stat-row">DRS Zones <span class="stat-val">3</span></div>
+    <div class="stat-row">Sectors <span class="stat-val">3</span></div>
     <div class="stat-row">Direction <span class="stat-val">Anti-CW</span></div>
     <div class="stat-row">Lap Record <span class="stat-val">1:29.708</span></div>
   </div>
@@ -199,22 +199,61 @@
       <div class="legend-dot" style="color:#00f0ff; background:#00f0ff;"></div>Track Edge
     </div>
     <div class="legend-item">
-      <div class="legend-dot" style="color:#ff2d00; background:#ff2d00;"></div>Sector 1 End — 110m after T8
+      <div class="legend-dot" style="color:#ff2d00; background:#ff2d00;"></div>Sector 1 (S/F → Turn 8) — Red
     </div>
     <div class="legend-item">
-      <div class="legend-dot" style="color:#a855f7; background:#a855f7;"></div>Sector 2 End — 70m after T16
+      <div class="legend-dot" style="color:#2d7fff; background:#2d7fff;"></div>Sector 2 (Turn 8 → Turn 16) — Blue
     </div>
     <div class="legend-item">
-      <div class="legend-dot" style="color:#00ff88; background:#00ff88;"></div>DRS Activation Zones
-    </div>
-    <div class="legend-item">
-      <div class="legend-dot" style="color:#ff8800; background:#ff8800;"></div>DRS Detection Points
+      <div class="legend-dot" style="color:#00ff88; background:#00ff88;"></div>Sector 3 (Turn 16 → S/F) — Green
     </div>
   </div>
 
   <div id="controls-hint">
-    Drag to orbit &bull; Scroll to zoom &bull; Right-drag to pan
+    Drag to orbit &bull; Scroll to zoom &bull; Right-drag to pan &bull; <strong>S</strong> sectors &bull; <strong>M</strong> map
   </div>
+
+  <button id="btn-map" onclick="
+    const evt = new KeyboardEvent('keydown', {key: 'm'});
+    window.dispatchEvent(evt);
+  " style="
+    position: fixed;
+    bottom: 14px;
+    right: 170px;
+    z-index: 20;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #00f0ff;
+    background: rgba(0, 240, 255, 0.08);
+    border: 1px solid rgba(0, 240, 255, 0.25);
+    border-radius: 6px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+  " onmouseover="this.style.background='rgba(0,240,255,0.18)'" onmouseout="this.style.background=this.classList.contains('active')?'rgba(0,240,255,0.18)':'rgba(0,240,255,0.08)'">🗺 Map OFF</button>
+
+  <button id="btn-sectors" onclick="
+    const evt = new KeyboardEvent('keydown', {key: 's'});
+    window.dispatchEvent(evt);
+  " style="
+    position: fixed;
+    bottom: 14px;
+    right: 28px;
+    z-index: 20;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #00f0ff;
+    background: rgba(0, 240, 255, 0.08);
+    border: 1px solid rgba(0, 240, 255, 0.25);
+    border-radius: 6px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+  " onmouseover="this.style.background='rgba(0,240,255,0.18)'" onmouseout="this.style.background=this.classList.contains('active')?'rgba(0,240,255,0.18)':'rgba(0,240,255,0.08)'">⬡ Sectors OFF</button>
 
   <script type="importmap">
   {

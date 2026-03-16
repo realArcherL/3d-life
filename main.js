@@ -1,22 +1,17 @@
 /**
  * Miami International Autodrome — TRON Edition
  *
- * 52 GPS control points traced on satellite imagery by the user.
- * DRS zones, sectors, marshal sectors from the official FIA Media Map.
+ * Control points traced on satellite imagery by the user.
  *
  * Specs:
  *   Length:  5.412 km  |  Turns: 19  |  Direction: Anti-clockwise
  *   Designed by Apex Circuit Design
  *   Lap record: 1:29.708 — Max Verstappen (2023)
  *
- * DRS Data (FIA Media Map):
- *   Detection 1: 90m after T8   | Activation 1: 30m after T9
- *   Detection 2: 70m after T16  | Activation 2: 450m after T16
- *   Detection 3: 15m after T17  | Activation 3: On T19 apex
- *
  * Sectors:
- *   S1 end: 110m after T8  |  S2 end: 70m after T16
- *   Speed trap: 150m before T17
+ *   S1 (Red):   S/F → Turn 8
+ *   S2 (Blue):  Turn 8 → Turn 16
+ *   S3 (Green): Turn 16 → S/F
  */
 
 import * as THREE from 'three';
@@ -28,10 +23,12 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 const TRON = {
   cyan: 0x00f0ff,
   cyanDim: 0x005566,
+  blue: 0x2d7fff,
   magenta: 0xff00aa,
   orange: 0xff8800,
   red: 0xff2d00,
   green: 0x00ff88,
+  yellow: 0xffd700,
   purple: 0xa855f7,
   white: 0xffffff,
   darkGround: 0x020405,
@@ -45,61 +42,61 @@ const TRON = {
 // [x, z] metres from stadium centre
 // ═══════════════════════════════════════════════
 const TRACK_POINTS = [
-  [53.4, -175.1], // 0  S/F area
-  [357.4, 15.1], // 1
-  [361.0, 41.8], // 2  T1
-  [300.3, 92.3], // 3  T2
-  [293.2, 117.3], // 4
-  [294.8, 190.9], // 5  T3
-  [240.2, 238.4], // 6  T4
-  [159.6, 260.4], // 7  T5
-  [118.2, 259.6], // 8  T6
-  [69.8, 248.3], // 9  T7-T8
-  [-184.1, 96.4], // 10 T9
-  [-237.3, 100.3], // 11 T10
-  [-298.5, 137.7], // 12
-  [-334.5, 147.1], // 13 T11
-  [-370.4, 138.8], // 14
-  [-439.7, 81.9], // 15 T12-T13
-  [-476.8, 77.2], // 16
-  [-510.7, 84.2], // 17 T14
-  [-552.6, 103.6], // 18 T15
-  [-574.0, 127.7], // 19
-  [-588.0, 159.4], // 20 T16
-  [-585.7, 198.4], // 21
-  [-557.8, 222.0], // 22
-  [-495.6, 215.8], // 23 Back straight start
-  [-342.6, 246.5], // 24
-  [-55.3, 241.3], // 25
-  [165.0, 310.9], // 26 T17 approach
-  [197.7, 316.3], // 27 T17
-  [286.8, 318.1], // 28
-  [379.1, 299.3], // 29 T18
-  [685.7, 180.7], // 30
-  [821.8, 98.7], // 31 T19 area
-  [827.2, 78.3], // 32
-  [804.1, 61.6], // 33
-  [776.7, 40.7], // 34
-  [762.2, 14.9], // 35
-  [766.0, -14.7], // 36
-  [781.5, -33.5], // 37
-  [804.9, -41.6], // 38
-  [857.3, -41.5], // 39
-  [878.7, -48.5], // 40
-  [914.7, -111.9], // 41 NE hairpin
-  [893.2, -125.9], // 42
-  [910.4, -210.7], // 43
-  [894.8, -224.7], // 44
-  [571.4, -237.3], // 44a — top straight ¼
-  [248.0, -250.0], // 44b — top straight ½
-  [-75.3, -262.6], // 44c — top straight ¾
-  [-398.7, -275.2], // 45 Top straight
-  [-410.1, -267.7], // 46
-  [-405.6, -242.4], // 47
-  [-317.7, -185.5], // 48
-  [-292.5, -180.6], // 49
-  [-139.3, -238.7], // 50
-  [-48.7, -229.3], // 51 Final approach
+  [53.4, -175.1],
+  [357.4, 15.1],
+  [361.0, 41.8],
+  [300.3, 92.3],
+  [293.2, 117.3],
+  [294.8, 190.9],
+  [240.2, 238.4],
+  [159.6, 260.4],
+  [118.2, 259.6],
+  [69.8, 248.3],
+  [-184.1, 96.4],
+  [-237.3, 100.3],
+  [-298.5, 137.7],
+  [-334.5, 147.1],
+  [-370.4, 138.8],
+  [-439.7, 81.9],
+  [-476.8, 77.2],
+  [-510.7, 84.2],
+  [-552.6, 103.6],
+  [-574.0, 127.7],
+  [-588.0, 159.4],
+  [-585.7, 198.4],
+  [-557.8, 222.0],
+  [-495.6, 215.8],
+  [-342.6, 246.5],
+  [-55.3, 241.3],
+  [165.0, 310.9],
+  [197.7, 316.3],
+  [286.8, 318.1],
+  [379.1, 299.3],
+  [685.7, 180.7],
+  [821.8, 98.7],
+  [827.2, 78.3],
+  [804.1, 61.6],
+  [776.7, 40.7],
+  [762.2, 14.9],
+  [766.0, -14.7],
+  [781.5, -33.5],
+  [804.9, -41.6],
+  [857.3, -41.5],
+  [878.7, -48.5],
+  [914.7, -111.9],
+  [893.2, -125.9],
+  [910.4, -210.7],
+  [894.8, -224.7],
+  [571.4, -237.3],
+  [248.0, -250.0],
+  [-75.3, -262.6],
+  [-398.7, -275.2],
+  [-410.1, -267.7],
+  [-405.6, -242.4],
+  [-317.7, -185.5],
+  [-292.5, -180.6],
+  [-139.3, -238.7],
+  [-48.7, -229.3],
 ];
 
 // ═══════════════════════════════════════════════
@@ -335,6 +332,76 @@ function buildPlatform() {
   return group;
 }
 scene.add(buildPlatform());
+
+// ═══════════════════════════════════════════════
+// SATELLITE MAP UNDERLAY (toggleable)
+// Esri World Imagery projected onto the platform top surface
+// ═══════════════════════════════════════════════
+const mapUnderlayGroup = new THREE.Group();
+mapUnderlayGroup.visible = false; // hidden by default
+
+(function buildMapUnderlay() {
+  // Platform dimensions & position
+  const slabW = 2200,
+    slabD = 1100;
+  const cx = 100,
+    cz = 20;
+
+  // Geographic bounds matching the platform
+  // Computed from: CENTER (25.9581, -80.2389), M_LAT=111320, M_LON=~100175
+  const latBot = 25.95298,
+    latTop = 25.962861;
+  const lngL = -80.248891,
+    lngR = -80.226911;
+
+  // Esri World Imagery static export — 2048px wide for good detail
+  const w = 2048,
+    h = Math.round(2048 * (slabD / slabW));
+  const bbox = `${lngL},${latBot},${lngR},${latTop}`;
+  const url = `https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/export?bbox=${bbox}&bboxSR=4326&size=${w},${h}&imageSR=4326&format=png32&f=image`;
+
+  const loader = new THREE.TextureLoader();
+  loader.load(
+    url,
+    tex => {
+      tex.minFilter = THREE.LinearFilter;
+      tex.magFilter = THREE.LinearFilter;
+      tex.colorSpace = THREE.SRGBColorSpace;
+
+      const geo = new THREE.PlaneGeometry(slabW, slabD);
+      const mat = new THREE.MeshBasicMaterial({
+        map: tex,
+        transparent: true,
+        opacity: 0.45,
+        depthWrite: false,
+      });
+      const plane = new THREE.Mesh(geo, mat);
+      plane.rotation.x = -Math.PI / 2;
+      plane.position.set(cx, PLATFORM_Y + 0.3, cz);
+      mapUnderlayGroup.add(plane);
+
+      console.log('%c Satellite map underlay loaded', 'color: #00ff88;');
+    },
+    undefined,
+    err => {
+      console.warn('Map underlay failed to load:', err);
+    },
+  );
+})();
+scene.add(mapUnderlayGroup);
+
+// ─── Map underlay toggle via keyboard (M key) or button ───
+function toggleMapUnderlay() {
+  mapUnderlayGroup.visible = !mapUnderlayGroup.visible;
+  const btn = document.getElementById('btn-map');
+  if (btn) {
+    btn.classList.toggle('active', mapUnderlayGroup.visible);
+    btn.textContent = mapUnderlayGroup.visible ? '🗺 Map ON' : '🗺 Map OFF';
+  }
+}
+window.addEventListener('keydown', e => {
+  if (e.key === 'm' || e.key === 'M') toggleMapUnderlay();
+});
 
 // ═══════════════════════════════════════════════
 // TRACK CURVE
@@ -593,6 +660,104 @@ function makeStandLabel(name, cx, cz) {
 }
 
 STANDS_DATA.forEach(s => scene.add(makeStandLabel(s.name, s.cx, s.cz)));
+
+const TURN_POSITIONS = [
+  { n: 1, x: 371.4, z: 15 },
+  { n: 2, x: 276.9, z: 109.6 },
+  { n: 3, x: 300.5, z: 205.2 },
+  { n: 4, x: -216.1, z: 81.6 },
+  { n: 5, x: -343.9, z: 166.5 },
+  { n: 6, x: -464.3, z: 55.9 },
+  { n: 7, x: -612.5, z: 199.8 },
+  { n: 8, x: -549.1, z: 249.2 },
+  { n: 9, x: -56.1, z: 262.1 },
+  { n: 10, x: 192, z: 298.7 },
+  { n: 11, x: 850.5, z: 95.6 },
+  { n: 12, x: 739.8, z: 1.1 },
+  { n: 13, x: 868.7, z: -34.4 },
+  { n: 14, x: 939.6, z: -108.5 },
+  { n: 15, x: 862.3, z: -133.2 },
+  { n: 16, x: 908.5, z: -231 },
+  { n: 17, x: -420.2, z: -294.4 },
+  { n: 18, x: -316, z: -161.2 },
+  { n: 19, x: -117.3, z: -214.9 },
+];
+
+function makeTurnSprite(num) {
+  const px = 256;
+  const canvas = document.createElement('canvas');
+  canvas.width = px;
+  canvas.height = px;
+  const ctx = canvas.getContext('2d');
+
+  // Dark filled circle with bright border
+  ctx.beginPath();
+  ctx.arc(px / 2, px / 2, px * 0.36, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(0, 5, 8, 0.88)';
+  ctx.fill();
+  ctx.strokeStyle = '#ff2d00';
+  ctx.lineWidth = 5;
+  ctx.stroke();
+
+  // Two-digit number text (01, 02, ... 19) matching FIA style
+  const label = String(num).padStart(2, '0');
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 90px "Orbitron", "Helvetica Neue", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(label, px / 2, px / 2 + 4);
+
+  const tex = new THREE.CanvasTexture(canvas);
+  const mat = new THREE.SpriteMaterial({
+    map: tex,
+    depthTest: false,
+    transparent: true,
+  });
+  const sprite = new THREE.Sprite(mat);
+  sprite.scale.set(22, 22, 1);
+  return sprite;
+}
+
+TURN_POSITIONS.forEach(({ n, x, z }) => {
+  const sprite = makeTurnSprite(n);
+  sprite.position.set(x, PLATFORM_Y + 30, z);
+  scene.add(sprite);
+});
+
+// S/F marker sprite
+(function addSFMarker() {
+  const px = 256;
+  const canvas = document.createElement('canvas');
+  canvas.width = px;
+  canvas.height = px;
+  const ctx = canvas.getContext('2d');
+
+  ctx.beginPath();
+  ctx.arc(px / 2, px / 2, px * 0.36, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(0, 5, 8, 0.88)';
+  ctx.fill();
+  ctx.strokeStyle = '#00f0ff';
+  ctx.lineWidth = 5;
+  ctx.stroke();
+
+  ctx.fillStyle = '#00f0ff';
+  ctx.font = 'bold 72px "Orbitron", "Helvetica Neue", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('S/F', px / 2, px / 2 + 4);
+
+  const tex = new THREE.CanvasTexture(canvas);
+  const mat = new THREE.SpriteMaterial({
+    map: tex,
+    depthTest: false,
+    transparent: true,
+  });
+  const sprite = new THREE.Sprite(mat);
+  sprite.scale.set(26, 26, 1);
+  sprite.position.set(53, PLATFORM_Y + 35, -190);
+  scene.add(sprite);
+})();
+
 // ═══════════════════════════════════════════════
 function buildStartFinish() {
   const canvas = document.createElement('canvas');
@@ -625,194 +790,120 @@ function buildStartFinish() {
 scene.add(buildStartFinish());
 
 // ═══════════════════════════════════════════════
-// DRS ZONES (from FIA Media Map — exact specs)
-//
-// Detection 1: 90m after T8   → Activation 1: 30m after T9
-// Detection 2: 70m after T16  → Activation 2: 450m after T16
-// Detection 3: 15m after T17  → Activation 3: On T19 apex
+// SECTOR DIVIDERS — Transparent walls (toggleable)
+// S1 (Red): S/F → Turn 8  |  S2 (Blue): Turn 8 → Turn 16  |  S3 (Green): Turn 16 → S/F
 // ═══════════════════════════════════════════════
-function buildDRSZones() {
-  const group = new THREE.Group();
+const sectorWallGroup = new THREE.Group();
+sectorWallGroup.visible = false; // hidden by default
 
-  // DRS Activation zones (GREEN — where DRS can be used)
-  const activations = [
-    { tStart: 0.208, tEnd: 0.244, label: 'DRS 1: 30m after T9 → T10' },
-    {
-      tStart: 0.415,
-      tEnd: 0.49,
-      label: 'DRS 2: 450m after T16 → back straight',
-    },
-    { tStart: 0.935, tEnd: 0.008, label: 'DRS 3: T19 apex → S/F' },
-  ];
-
-  activations.forEach(zone => {
-    const pts = [];
-    const steps = 500;
-    for (let i = 0; i <= steps; i++) {
-      let t = zone.tStart + (i / steps) * (zone.tEnd - zone.tStart);
-      if (t < 0) t += 1;
-      if (t > 1) t -= 1;
-      const p = curve.getPointAt(t);
-      const n = getNormal(t);
-      // Green line on the right side of track
-      pts.push(
-        p
-          .clone()
-          .add(n.clone().multiplyScalar(TRACK_HALF - 2))
-          .setY(PLATFORM_Y + 0.6),
-      );
-    }
-    const geo = new THREE.BufferGeometry().setFromPoints(pts);
-
-    // Bright line
-    group.add(
-      new THREE.Line(
-        geo,
-        new THREE.LineBasicMaterial({
-          color: TRON.green,
-          transparent: true,
-          opacity: 0.7,
-        }),
-      ),
-    );
-    // Glow
-    const glowPts = pts.map(p => p.clone().setY(p.y + 0.4));
-    group.add(
-      new THREE.Line(
-        new THREE.BufferGeometry().setFromPoints(glowPts),
-        new THREE.LineBasicMaterial({
-          color: TRON.green,
-          transparent: true,
-          opacity: 0.15,
-        }),
-      ),
-    );
-  });
-
-  // DRS Detection points (ORANGE markers)
-  const detections = [
-    { t: 0.195, label: 'DET 1: 90m after T8' },
-    { t: 0.395, label: 'DET 2: 70m after T16' },
-    { t: 0.505, label: 'DET 3: 15m after T17' },
-  ];
-
-  detections.forEach(det => {
-    const p = curve.getPointAt(det.t);
-    const n = getNormal(det.t);
-
-    // Cross-track orange line
-    const pts = [
-      p
-        .clone()
-        .add(n.clone().multiplyScalar(TRACK_HALF))
-        .setY(PLATFORM_Y + 0.6),
-      p
-        .clone()
-        .add(n.clone().multiplyScalar(-TRACK_HALF))
-        .setY(PLATFORM_Y + 0.6),
-    ];
-    group.add(
-      new THREE.Line(
-        new THREE.BufferGeometry().setFromPoints(pts),
-        new THREE.LineBasicMaterial({
-          color: TRON.orange,
-          transparent: true,
-          opacity: 0.6,
-        }),
-      ),
-    );
-
-    // Glowing sphere marker
-    const sphere = new THREE.Mesh(
-      new THREE.SphereGeometry(3, 12, 12),
-      new THREE.MeshBasicMaterial({
-        color: TRON.orange,
-        transparent: true,
-        opacity: 0.5,
-      }),
-    );
-    sphere.position.copy(p).setY(PLATFORM_Y + 4);
-    group.add(sphere);
-  });
-
-  return group;
-}
-scene.add(buildDRSZones());
-
-// ═══════════════════════════════════════════════
-// SECTOR DIVIDERS (from FIA Media Map)
-// S1 end: 110m after T8  |  S2 end: 70m after T16
-// Speed trap: 150m before T17
-// ═══════════════════════════════════════════════
-function buildSectorLine(t, color, heightBoost) {
+function buildSectorWall(t, color, label) {
   const p = curve.getPointAt(t);
   const n = getNormal(t);
-  const h = heightBoost || 0;
+  const wallHeight = 40;
 
-  const pts = [
-    p
-      .clone()
-      .add(n.clone().multiplyScalar(TRACK_HALF + 5))
-      .setY(PLATFORM_Y + 0.8 + h),
-    p
-      .clone()
-      .add(n.clone().multiplyScalar(-(TRACK_HALF + 5)))
-      .setY(PLATFORM_Y + 0.8 + h),
-  ];
+  // Four corners of the wall quad
+  const halfSpan = TRACK_HALF + 8;
+  const left = p.clone().add(n.clone().multiplyScalar(halfSpan));
+  const right = p.clone().add(n.clone().multiplyScalar(-halfSpan));
 
-  // Bright line
-  scene.add(
-    new THREE.Line(
-      new THREE.BufferGeometry().setFromPoints(pts),
-      new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.8 }),
-    ),
-  );
+  const bl = new THREE.Vector3(left.x, PLATFORM_Y, left.z);
+  const br = new THREE.Vector3(right.x, PLATFORM_Y, right.z);
+  const tl = new THREE.Vector3(left.x, PLATFORM_Y + wallHeight, left.z);
+  const tr = new THREE.Vector3(right.x, PLATFORM_Y + wallHeight, right.z);
 
-  // Vertical glow column at each end
-  [0, 1].forEach(idx => {
-    const base = pts[idx].clone();
-    const top = base.clone().setY(PLATFORM_Y + 15);
-    scene.add(
-      new THREE.Line(
-        new THREE.BufferGeometry().setFromPoints([base, top]),
-        new THREE.LineBasicMaterial({
-          color,
-          transparent: true,
-          opacity: 0.15,
-        }),
-      ),
-    );
+  // Build geometry from two triangles
+  const vertices = new Float32Array([
+    bl.x,
+    bl.y,
+    bl.z,
+    br.x,
+    br.y,
+    br.z,
+    tl.x,
+    tl.y,
+    tl.z,
+    br.x,
+    br.y,
+    br.z,
+    tr.x,
+    tr.y,
+    tr.z,
+    tl.x,
+    tl.y,
+    tl.z,
+  ]);
+  const wallGeo = new THREE.BufferGeometry();
+  wallGeo.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+  wallGeo.computeVertexNormals();
+
+  // Transparent glowing wall
+  const wallMat = new THREE.MeshBasicMaterial({
+    color,
+    transparent: true,
+    opacity: 0.12,
+    side: THREE.DoubleSide,
+    depthWrite: false,
   });
+  sectorWallGroup.add(new THREE.Mesh(wallGeo, wallMat));
+
+  // Bright border edges
+  const edgePts = [bl, br, tr, tl, bl];
+  const edgeGeo = new THREE.BufferGeometry().setFromPoints(edgePts);
+  const edgeMat = new THREE.LineBasicMaterial({
+    color,
+    transparent: true,
+    opacity: 0.6,
+  });
+  sectorWallGroup.add(new THREE.Line(edgeGeo, edgeMat));
+
+  // Bottom bright line on track surface
+  const basePts = [
+    bl.clone().setY(PLATFORM_Y + 0.5),
+    br.clone().setY(PLATFORM_Y + 0.5),
+  ];
+  const baseMat = new THREE.LineBasicMaterial({
+    color,
+    transparent: true,
+    opacity: 0.9,
+  });
+  sectorWallGroup.add(
+    new THREE.Line(new THREE.BufferGeometry().setFromPoints(basePts), baseMat),
+  );
 }
 
-// S1 end ≈ t=0.198 (110m after T8)
-buildSectorLine(0.198, TRON.red);
-// S2 end ≈ t=0.398 (70m after T16)
-buildSectorLine(0.398, TRON.purple);
-// Speed trap ≈ t=0.475 (150m before T17)
-buildSectorLine(0.475, TRON.orange, 2);
+// S1→S2 boundary at Turn 8 — RED
+buildSectorWall(0.3081, TRON.red, 'S1');
+// S2→S3 boundary at Turn 16 — BLUE
+buildSectorWall(0.6588, TRON.blue, 'S2');
+// S3→S1 boundary at S/F — GREEN
+buildSectorWall(0.0, TRON.green, 'S3');
+
+scene.add(sectorWallGroup);
+
+// ─── Sector wall toggle via keyboard (S key) or button ───
+function toggleSectorWalls() {
+  sectorWallGroup.visible = !sectorWallGroup.visible;
+  const btn = document.getElementById('btn-sectors');
+  if (btn) {
+    btn.classList.toggle('active', sectorWallGroup.visible);
+    btn.textContent = sectorWallGroup.visible
+      ? '⬡ Sectors ON'
+      : '⬡ Sectors OFF';
+  }
+}
+window.addEventListener('keydown', e => {
+  if (e.key === 's' || e.key === 'S') toggleSectorWalls();
+});
 
 // ═══════════════════════════════════════════════
-// ANIMATED PARTICLE (racing dot along track)
+// ANIMATED PARTICLE (simple racing ball along track)
 // ═══════════════════════════════════════════════
-const racerGeo = new THREE.SphereGeometry(4, 16, 16);
+const racerGeo = new THREE.SphereGeometry(4, 24, 24);
 const racerMat = new THREE.MeshBasicMaterial({
   color: TRON.cyan,
-  transparent: true,
-  opacity: 0.9,
 });
 const racer = new THREE.Mesh(racerGeo, racerMat);
 scene.add(racer);
-
-// Trailing glow
-const trailGeo = new THREE.SphereGeometry(8, 8, 8);
-const trailMat = new THREE.MeshBasicMaterial({
-  color: TRON.cyan,
-  transparent: true,
-  opacity: 0.15,
-});
-const trailGlow = new THREE.Mesh(trailGeo, trailMat);
-scene.add(trailGlow);
 
 let racerT = 0;
 
@@ -856,16 +947,10 @@ function animate() {
 
   controls.update(); // smooth damping
 
-  // Animate racing dot
+  // Animate racing ball (simple, no pulsing)
   racerT = (racerT + dt * 0.035) % 1;
   const rPos = curve.getPointAt(racerT);
-  racer.position.set(rPos.x, PLATFORM_Y + 3, rPos.z);
-  trailGlow.position.set(rPos.x, PLATFORM_Y + 3, rPos.z);
-
-  // Pulse the racer glow
-  const pulse = 0.7 + Math.sin(clock.elapsedTime * 4) * 0.3;
-  racerMat.opacity = pulse;
-  trailGlow.scale.setScalar(1 + Math.sin(clock.elapsedTime * 6) * 0.3);
+  racer.position.set(rPos.x, PLATFORM_Y + 4, rPos.z);
 
   renderer.render(scene, camera);
 }
