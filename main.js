@@ -347,16 +347,26 @@ mapUnderlayGroup.visible = false; // hidden by default
   const cx = 100,
     cz = 20;
 
-  // Geographic bounds matching the platform
-  // Computed from: CENTER (25.9581, -80.2389), M_LAT=111320, M_LON=~100175
-  const latBot = 25.95298,
-    latTop = 25.962861;
-  const lngL = -80.248891,
-    lngR = -80.226911;
+  // Coordinate conversion (must match draw-track.html exactly)
+  const CENTER_LAT = 25.9581,
+    CENTER_LON = -80.2389;
+  const M_LAT = 111320;
+  const M_LON = 111320 * Math.cos((CENTER_LAT * Math.PI) / 180);
 
-  // Esri World Imagery static export — 2048px wide for good detail
+  // Geographic bounds from platform edges → lat/lng
+  const halfW = slabW / 2,
+    halfD = slabD / 2;
+  const lngL = CENTER_LON + (cx - halfW) / M_LON;
+  const lngR = CENTER_LON + (cx + halfW) / M_LON;
+  const latTop = CENTER_LAT - (cz - halfD) / M_LAT; // north
+  const latBot = CENTER_LAT - (cz + halfD) / M_LAT; // south
+
+  // Image pixel dimensions must match bbox aspect ratio IN DEGREES
+  // so the Esri API doesn't silently expand/crop the extent.
+  const degW = lngR - lngL;
+  const degH = latTop - latBot;
   const w = 2048,
-    h = Math.round(2048 * (slabD / slabW));
+    h = Math.round((w * degH) / degW);
   const bbox = `${lngL},${latBot},${lngR},${latTop}`;
   const url = `https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/export?bbox=${bbox}&bboxSR=4326&size=${w},${h}&imageSR=4326&format=png32&f=image`;
 
@@ -924,8 +934,54 @@ controls.minPolarAngle = 0.05;
 controls.screenSpacePanning = false; // pan parallel to ground
 
 // Initial camera position — elevated angle showing depth like Skyline
-camera.position.set(-400, PLATFORM_Y + 600, 1100);
+const DEFAULT_CAM_POS = new THREE.Vector3(-400, PLATFORM_Y + 600, 1100);
+const DEFAULT_CAM_TARGET = new THREE.Vector3(100, PLATFORM_Y, 20);
+camera.position.copy(DEFAULT_CAM_POS);
 controls.update();
+
+// ═══════════════════════════════════════════════
+// CAMERA MODES: 'orbit' (free) or 'follow' (tracks ball)
+// ═══════════════════════════════════════════════
+let cameraMode = 'orbit';
+const FOLLOW_HEIGHT = 60;
+const FOLLOW_DISTANCE = 120;
+
+function toggleFollowCam() {
+  if (cameraMode === 'orbit') {
+    cameraMode = 'follow';
+    controls.enabled = false;
+  } else {
+    cameraMode = 'orbit';
+    controls.enabled = true;
+    // Smoothly return to a good overview after leaving follow mode
+    controls.target.copy(DEFAULT_CAM_TARGET);
+    controls.update();
+  }
+  const btn = document.getElementById('btn-follow');
+  if (btn) {
+    btn.classList.toggle('active', cameraMode === 'follow');
+    btn.textContent =
+      cameraMode === 'follow' ? '🎥 Follow ON' : '🎥 Follow OFF';
+  }
+}
+
+function resetView() {
+  cameraMode = 'orbit';
+  controls.enabled = true;
+  camera.position.copy(DEFAULT_CAM_POS);
+  controls.target.copy(DEFAULT_CAM_TARGET);
+  controls.update();
+  const btn = document.getElementById('btn-follow');
+  if (btn) {
+    btn.classList.remove('active');
+    btn.textContent = '🎥 Follow OFF';
+  }
+}
+
+window.addEventListener('keydown', e => {
+  if (e.key === 'f' || e.key === 'F') toggleFollowCam();
+  if (e.key === 'r' || e.key === 'R') resetView();
+});
 
 // ═══════════════════════════════════════════════
 // RESIZE
@@ -940,17 +996,52 @@ window.addEventListener('resize', () => {
 // RENDER LOOP
 // ═══════════════════════════════════════════════
 const clock = new THREE.Clock();
+const _smoothCamPos = new THREE.Vector3();
+const _smoothCamTarget = new THREE.Vector3();
+let _followInitialized = false;
 
 function animate() {
   requestAnimationFrame(animate);
   const dt = clock.getDelta();
 
-  controls.update(); // smooth damping
-
   // Animate racing ball (simple, no pulsing)
   racerT = (racerT + dt * 0.035) % 1;
   const rPos = curve.getPointAt(racerT);
   racer.position.set(rPos.x, PLATFORM_Y + 4, rPos.z);
+
+  if (cameraMode === 'follow') {
+    // Get tangent to look ahead
+    const tang = curve.getTangentAt(racerT).normalize();
+    // Camera sits behind the ball, elevated
+    const idealPos = new THREE.Vector3(
+      rPos.x - tang.x * FOLLOW_DISTANCE,
+      PLATFORM_Y + FOLLOW_HEIGHT,
+      rPos.z - tang.z * FOLLOW_DISTANCE,
+    );
+    // Look-at point slightly ahead of the ball
+    const idealTarget = new THREE.Vector3(
+      rPos.x + tang.x * 40,
+      PLATFORM_Y + 4,
+      rPos.z + tang.z * 40,
+    );
+
+    if (!_followInitialized) {
+      _smoothCamPos.copy(idealPos);
+      _smoothCamTarget.copy(idealTarget);
+      _followInitialized = true;
+    }
+
+    // Smooth lerp for cinematic feel
+    const lerpFactor = 1 - Math.exp(-3.5 * dt);
+    _smoothCamPos.lerp(idealPos, lerpFactor);
+    _smoothCamTarget.lerp(idealTarget, lerpFactor);
+
+    camera.position.copy(_smoothCamPos);
+    camera.lookAt(_smoothCamTarget);
+  } else {
+    _followInitialized = false;
+    controls.update(); // smooth damping for orbit mode
+  }
 
   renderer.render(scene, camera);
 }

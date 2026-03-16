@@ -210,8 +210,50 @@
   </div>
 
   <div id="controls-hint">
-    Drag to orbit &bull; Scroll to zoom &bull; Right-drag to pan &bull; <strong>S</strong> sectors &bull; <strong>M</strong> map
+    Drag to orbit &bull; Scroll to zoom &bull; Right-drag to pan &bull; <strong>S</strong> sectors &bull; <strong>M</strong> map &bull; <strong>F</strong> follow &bull; <strong>R</strong> reset
   </div>
+
+  <button id="btn-reset" onclick="
+    const evt = new KeyboardEvent('keydown', {key: 'r'});
+    window.dispatchEvent(evt);
+  " style="
+    position: fixed;
+    bottom: 14px;
+    right: 448px;
+    z-index: 20;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #00f0ff;
+    background: rgba(0, 240, 255, 0.08);
+    border: 1px solid rgba(0, 240, 255, 0.25);
+    border-radius: 6px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+  " onmouseover="this.style.background='rgba(0,240,255,0.18)'" onmouseout="this.style.background='rgba(0,240,255,0.08)'">↺ Reset</button>
+
+  <button id="btn-follow" onclick="
+    const evt = new KeyboardEvent('keydown', {key: 'f'});
+    window.dispatchEvent(evt);
+  " style="
+    position: fixed;
+    bottom: 14px;
+    right: 310px;
+    z-index: 20;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #00f0ff;
+    background: rgba(0, 240, 255, 0.08);
+    border: 1px solid rgba(0, 240, 255, 0.25);
+    border-radius: 6px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+  " onmouseover="this.style.background='rgba(0,240,255,0.18)'" onmouseout="this.style.background=this.classList.contains('active')?'rgba(0,240,255,0.18)':'rgba(0,240,255,0.08)'">🎥 Follow OFF</button>
 
   <button id="btn-map" onclick="
     const evt = new KeyboardEvent('keydown', {key: 'm'});
