@@ -119,7 +119,210 @@
       width: 8px;
       height: 8px;
       border-radius: 50%;
+      flex-shrink: 0;
       box-shadow: 0 0 6px currentColor;
+    }
+
+    #ticket-legend {
+      display: none;
+      position: fixed;
+      bottom: 50px;
+      left: 28px;
+      z-index: 10;
+      pointer-events: none;
+      font-family: 'Rajdhani', sans-serif;
+      background: rgba(0, 4, 10, 0.75);
+      border: 1px solid rgba(0, 240, 255, 0.15);
+      border-radius: 8px;
+      padding: 12px 16px;
+    }
+
+    #ticket-legend .tl-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 9px;
+      letter-spacing: 3px;
+      color: rgba(0, 240, 255, 0.5);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .tl-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.5);
+      margin-bottom: 5px;
+    }
+
+    .tl-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      box-shadow: 0 0 7px currentColor;
+    }
+
+    .btn-toolbar {
+      position: fixed;
+      bottom: 14px;
+      right: 28px;
+      z-index: 20;
+      display: flex;
+      gap: 8px;
+    }
+
+    .tb-btn {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 12px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #00f0ff;
+      background: rgba(0, 240, 255, 0.08);
+      border: 1px solid rgba(0, 240, 255, 0.25);
+      border-radius: 6px;
+      padding: 8px 16px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .tb-btn:hover, .tb-btn.active {
+      background: rgba(0, 240, 255, 0.18);
+    }
+
+    .tb-btn.tickets-btn {
+      color: #ffd700;
+      border-color: rgba(255, 215, 0, 0.35);
+      background: rgba(255, 215, 0, 0.06);
+    }
+
+    .tb-btn.tickets-btn:hover, .tb-btn.tickets-btn.active {
+      background: rgba(255, 215, 0, 0.16);
+    }
+
+    /* ── Spot detail panel ── */
+    #spot-panel {
+      --tier-color: #00f0ff;
+      position: fixed;
+      top: 50%;
+      right: -420px;
+      transform: translateY(-50%);
+      width: 360px;
+      z-index: 30;
+      background: rgba(0, 4, 12, 0.96);
+      border: 1px solid var(--tier-color);
+      border-radius: 12px;
+      padding: 24px 22px 20px;
+      font-family: 'Rajdhani', sans-serif;
+      box-shadow: 0 0 40px rgba(0,0,0,0.8), 0 0 20px color-mix(in srgb, var(--tier-color) 20%, transparent);
+      transition: right 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+      pointer-events: none;
+    }
+
+    #spot-panel.open {
+      right: 24px;
+      pointer-events: auto;
+    }
+
+    #sp-close {
+      position: absolute;
+      top: 12px;
+      right: 14px;
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.3);
+      font-size: 16px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px 6px;
+      transition: color 0.15s;
+    }
+
+    #sp-close:hover { color: #fff; }
+
+    #sp-tier {
+      font-family: 'Orbitron', monospace;
+      font-size: 9px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    #sp-name {
+      font-family: 'Orbitron', monospace;
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+      line-height: 1.3;
+    }
+
+    #sp-price-area {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+
+    #sp-price {
+      font-family: 'Orbitron', monospace;
+      font-size: 32px;
+      font-weight: 900;
+      text-shadow: 0 0 20px currentColor;
+    }
+
+    #sp-price-note {
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+    }
+
+    #sp-sub {
+      font-size: 12px;
+      color: rgba(255,255,255,0.35);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    #sp-notes {
+      list-style: none;
+      margin-bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    #sp-notes li {
+      font-size: 13px;
+      color: rgba(255,255,255,0.65);
+      line-height: 1.45;
+      padding-left: 16px;
+      position: relative;
+    }
+
+    #sp-notes li::before {
+      content: '▸';
+      position: absolute;
+      left: 0;
+      color: var(--tier-color);
+      opacity: 0.7;
+      font-size: 10px;
+      top: 2px;
+    }
+
+    #sp-verdict {
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.85);
+      border-left: 3px solid var(--tier-color);
+      padding-left: 12px;
+      line-height: 1.4;
     }
 
     #loading {
@@ -209,93 +412,46 @@
     </div>
   </div>
 
-  <div id="controls-hint">
-    Drag to orbit &bull; Scroll to zoom &bull; Right-drag to pan &bull; <strong>S</strong> sectors &bull; <strong>M</strong> map &bull; <strong>F</strong> follow &bull; <strong>R</strong> reset
+  <!-- Spot detail panel (slides in from right on card click) -->
+  <div id="spot-panel">
+    <button id="sp-close" onclick="document.getElementById('spot-panel').classList.remove('open')">✕</button>
+    <div id="sp-tier"></div>
+    <div id="sp-name"></div>
+    <div id="sp-price-area">
+      <span id="sp-price"></span>
+      <span id="sp-price-note"></span>
+    </div>
+    <div id="sp-sub"></div>
+    <ul id="sp-notes"></ul>
+    <div id="sp-verdict"></div>
   </div>
 
-  <button id="btn-reset" onclick="
-    const evt = new KeyboardEvent('keydown', {key: 'r'});
-    window.dispatchEvent(evt);
-  " style="
-    position: fixed;
-    bottom: 14px;
-    right: 448px;
-    z-index: 20;
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 12px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: #00f0ff;
-    background: rgba(0, 240, 255, 0.08);
-    border: 1px solid rgba(0, 240, 255, 0.25);
-    border-radius: 6px;
-    padding: 8px 16px;
-    cursor: pointer;
-    transition: all 0.2s;
-  " onmouseover="this.style.background='rgba(0,240,255,0.18)'" onmouseout="this.style.background='rgba(0,240,255,0.08)'">↺ Reset</button>
+  <div id="ticket-legend">
+    <div class="tl-title">Ticket Tier Guide — May 2026</div>
+    <div class="tl-row"><div class="tl-dot" style="color:#00ff88;background:#00ff88;"></div>Budget &lt;$800 — Beach · Marina · Grandstand Pass</div>
+    <div class="tl-row"><div class="tl-dot" style="color:#00f0ff;background:#00f0ff;"></div>Mid $800–$1.2K — S/F · Turn 1 · Turn 18</div>
+    <div class="tl-row"><div class="tl-dot" style="color:#2d7fff;background:#2d7fff;"></div>Team Sections — Atlassian×Williams · McLaren</div>
+    <div class="tl-row"><div class="tl-dot" style="color:#ff8800;background:#ff8800;"></div>Premium — Hard Rock Beach Club ($1,500)</div>
+    <div class="tl-row"><div class="tl-dot" style="color:#ff00aa;background:#ff00aa;"></div>Luxury $4K+ — MSC Yacht Club · Podium Club</div>
+    <div class="tl-row"><div class="tl-dot" style="color:#ffd700;background:#ffd700;"></div>Ultra VIP — Paddock Club (from $3K/day)</div>
+  </div>
 
-  <button id="btn-follow" onclick="
-    const evt = new KeyboardEvent('keydown', {key: 'f'});
-    window.dispatchEvent(evt);
-  " style="
-    position: fixed;
-    bottom: 14px;
-    right: 310px;
-    z-index: 20;
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 12px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: #00f0ff;
-    background: rgba(0, 240, 255, 0.08);
-    border: 1px solid rgba(0, 240, 255, 0.25);
-    border-radius: 6px;
-    padding: 8px 16px;
-    cursor: pointer;
-    transition: all 0.2s;
-  " onmouseover="this.style.background='rgba(0,240,255,0.18)'" onmouseout="this.style.background=this.classList.contains('active')?'rgba(0,240,255,0.18)':'rgba(0,240,255,0.08)'">🎥 Follow OFF</button>
+  <div id="controls-hint">
+    Drag to orbit &bull; Scroll to zoom &bull; Right-drag to pan &bull; <strong>S</strong> sectors &bull; <strong>M</strong> map &bull; <strong>T</strong> tickets &bull; <strong>F</strong> follow &bull; <strong>R</strong> reset
+  </div>
 
-  <button id="btn-map" onclick="
-    const evt = new KeyboardEvent('keydown', {key: 'm'});
-    window.dispatchEvent(evt);
-  " style="
-    position: fixed;
-    bottom: 14px;
-    right: 170px;
-    z-index: 20;
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 12px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: #00f0ff;
-    background: rgba(0, 240, 255, 0.08);
-    border: 1px solid rgba(0, 240, 255, 0.25);
-    border-radius: 6px;
-    padding: 8px 16px;
-    cursor: pointer;
-    transition: all 0.2s;
-  " onmouseover="this.style.background='rgba(0,240,255,0.18)'" onmouseout="this.style.background=this.classList.contains('active')?'rgba(0,240,255,0.18)':'rgba(0,240,255,0.08)'">🗺 Map OFF</button>
-
-  <button id="btn-sectors" onclick="
-    const evt = new KeyboardEvent('keydown', {key: 's'});
-    window.dispatchEvent(evt);
-  " style="
-    position: fixed;
-    bottom: 14px;
-    right: 28px;
-    z-index: 20;
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 12px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: #00f0ff;
-    background: rgba(0, 240, 255, 0.08);
-    border: 1px solid rgba(0, 240, 255, 0.25);
-    border-radius: 6px;
-    padding: 8px 16px;
-    cursor: pointer;
-    transition: all 0.2s;
-  " onmouseover="this.style.background='rgba(0,240,255,0.18)'" onmouseout="this.style.background=this.classList.contains('active')?'rgba(0,240,255,0.18)':'rgba(0,240,255,0.08)'">⬡ Sectors OFF</button>
+  <div class="btn-toolbar">
+    <button id="btn-reset" class="tb-btn"
+      onclick="window.dispatchEvent(new KeyboardEvent('keydown',{key:'r'}))">↺ Reset</button>
+    <button id="btn-follow" class="tb-btn"
+      onclick="window.dispatchEvent(new KeyboardEvent('keydown',{key:'f'}))">🎥 Follow OFF</button>
+    <button id="btn-tickets" class="tb-btn tickets-btn"
+      onclick="window.dispatchEvent(new KeyboardEvent('keydown',{key:'t'}))">🎟 Tickets OFF</button>
+    <button id="btn-map" class="tb-btn"
+      onclick="window.dispatchEvent(new KeyboardEvent('keydown',{key:'m'}))">🗺 Map OFF</button>
+    <button id="btn-sectors" class="tb-btn"
+      onclick="window.dispatchEvent(new KeyboardEvent('keydown',{key:'s'}))">⬡ Sectors OFF</button>
+  </div>
 
   <script type="importmap">
   {

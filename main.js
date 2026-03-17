@@ -197,6 +197,205 @@ const STANDS_DATA = [
 ];
 
 // ═══════════════════════════════════════════════
+// VIEWING SPOTS — Grandstands, Clubs & Hospitality
+// Pricing from f1miamigp.com (May 2026 race weekend)
+// ═══════════════════════════════════════════════
+const TIER_COLORS = {
+  budget:  { hex: '#00ff88', num: 0x00ff88, label: 'Budget (<$800)'      },
+  mid:     { hex: '#00f0ff', num: 0x00f0ff, label: 'Mid-Range ($800–$1.2K)' },
+  team:    { hex: '#2d7fff', num: 0x2d7fff, label: 'Team Section'         },
+  premium: { hex: '#ff8800', num: 0xff8800, label: 'Premium Club'         },
+  luxury:  { hex: '#ff00aa', num: 0xff00aa, label: 'Luxury ($4K+)'        },
+  ultra:   { hex: '#ffd700', num: 0xffd700, label: 'Ultra VIP ($3K+/day)' },
+};
+
+const VIEWING_SPOTS = [
+  // ── Grandstands
+  {
+    label: 'START / FINISH',
+    sub: 'Pit Lane · Grid · Race Start · Best Atmosphere',
+    price: '$1,175', priceNote: '3-Day Pass  ·  Sun only $895',
+    tier: 'mid', x: 155, z: -190,
+    notes: [
+      'Watch the starting grid light sequence live — lap 1 from the best seat',
+      'Pit lane windows below — see tire changes happening in real time',
+      'Presented by Gainbridge · North Campus grandstand',
+      'Most electric atmosphere anywhere on the circuit on race day',
+      'Friday-only: $130 · Saturday-only: $475',
+    ],
+    verdict: 'Best all-round grandstand. Grid, pits & finish line in one view.',
+  },
+  {
+    label: 'TURN 1 STAND',
+    sub: 'Turns 1–3 · Lap-1 Chaos · Overtaking Hotspot',
+    price: '$900', priceNote: '3-Day Pass  ·  Sun only $740',
+    tier: 'mid', x: 390, z: -65,
+    notes: [
+      'Top r/formula1 pick for race-day spectacle — consistently recommended',
+      'Cars brake from 320+ km/h into Turn 1 — you hear and feel it',
+      'Sweeping views across Turns 1, 2 & 3',
+      'Lap-1 carnage spot: if a crash happens, it usually starts here',
+      'Friday-only: $100 · Saturday-only: $350',
+    ],
+    verdict: 'Best place for the drama. Turn 1 lap-1 is always unforgettable.',
+  },
+  {
+    label: 'TURN 18 STAND',
+    sub: '2nd Fastest Straight · 330 km/h · Speed Spectacle',
+    price: '$950', priceNote: '3-Day Pass  ·  Sun only $675',
+    tier: 'mid', x: -360, z: -215,
+    notes: [
+      '2nd fastest straight on the entire F1 calendar — cars hit 330+ km/h',
+      'You physically feel the shockwave as cars pass at full speed',
+      'Less overtaking action but the pure speed spectacle is unmatched',
+      'Great for photography — long exposures blur the cars dramatically',
+      'Friday-only: $105 · Saturday-only: $275',
+    ],
+    verdict: 'Speed freaks only. Pure sensory overload, minimal strategy watching.',
+  },
+  {
+    label: 'MARINA STAND',
+    sub: 'Turns 6–8 · Picturesque Marina · Best Budget Pick',
+    // Anchored to T16 South Stand (cx:-645, cz:210) — the T6–8 west section
+    price: '$700', priceNote: '3-Day Pass  ·  Sun only $535',
+    tier: 'budget', x: -720, z: 265,
+    notes: [
+      'Most picturesque grandstand location — marina backdrop behind the cars',
+      'Views across Turns 6, 7 & 8 — mid-speed technical section',
+      'MSC Yacht Club nearby adds to the atmosphere without the price tag',
+      'Best value named grandstand with a genuine sense of place',
+      'Friday-only: $85 · Saturday-only: $205',
+    ],
+    verdict: 'Best budget grandstand. You get location, views and real atmosphere.',
+  },
+  {
+    label: 'BEACH GRANDSTAND',
+    sub: 'Turns 11–12 · LED Videoboard · Festival Vibe',
+    // Anchored to Hard Rock Stand A (cx:818, cz:128) — T11 NE section
+    price: '$670', priceNote: '3-Day Pass  ·  Sun only $535',
+    tier: 'budget', x: 920, z: 180,
+    notes: [
+      'Cheapest named grandstand at the entire event',
+      'Giant trackside LED videoboard for live replays and entertainment',
+      'Hard Rock Beach Club literally next door — festival energy all weekend',
+      'Turns 11–12 see genuine race action including some overtakes',
+      'Friday-only: $75 · Saturday-only: $230',
+    ],
+    verdict: 'The budget pick. Solid for first-timers or casual fans.',
+  },
+  {
+    label: 'GRANDSTAND PASS',
+    sub: 'Roaming · All Stands · Best Flexibility',
+    // Floats above the S/F straight — roaming pass covers all stands
+    price: '$785', priceNote: '3-Day Roaming Pass',
+    tier: 'budget', x: 220, z: -75,
+    notes: [
+      '#1 Reddit recommendation for first-time Miami visitors, bar none',
+      'Full access to ALL grandstands across the entire weekend',
+      'Move to wherever the action is — no regrets about your fixed seat',
+      'Watch from S/F in the morning, be at T1 before race start',
+      'Best way to understand the full circuit layout in one visit',
+    ],
+    verdict: '★ Most recommended by the F1 community for first visits to Miami.',
+  },
+  // ── Team Sections
+  {
+    label: 'ATLASSIAN × WILLIAMS',
+    sub: 'Turns 17–19 · Williams Partner Section · Ask Your Friend!',
+    // T17(x:-420,z:-294) → T18(x:-316,z:-161) → T19(x:-117,z:-214) — south section
+    price: '$1,085', priceNote: '3-Day Pass  ·  Team Section',
+    tier: 'team', x: -400, z: -340,
+    notes: [
+      'Atlassian is an official partner of Williams Racing — this is their named section',
+      'Located at Turns 17–19, covering the fastest part of Sector 3',
+      'Your Atlassian contact may unlock complimentary team hospitality access',
+      'Team hospitality typically includes: garage tours, driver appearances, motorhome dining',
+      'Ask before buying — corporate partner passes are not sold publicly',
+    ],
+    verdict: '🔑 Talk to your friend first. Team hospitality > any grandstand ticket.',
+  },
+  {
+    label: 'McLAREN MASTERCARD',
+    sub: 'Marina · Turns 6–8 · Team Branded Section',
+    // Anchored to T16 Centre Stand (cx:-654, cz:138) — T6–7 west section
+    price: '$865', priceNote: '3-Day Pass  ·  Team Section',
+    tier: 'team', x: -720, z: 120,
+    notes: [
+      'McLaren Mastercard branded section in the marina area',
+      'Same circuit views as the Marina Grandstand — Turns 6–8',
+      'Enhanced amenities and team branding vs standard marina seats',
+      'Good pick for McLaren fans wanting a step up from general admission',
+    ],
+    verdict: 'Solid if you\'re a McLaren fan. Views identical to Marina Stand.',
+  },
+  // ── Clubs & Hospitality
+  {
+    label: 'HARD ROCK BEACH CLUB',
+    sub: 'Turns 11–14 · Pool · Live Music · Best Club Value',
+    // Anchored to NE Hairpin Stand (cx:800, cz:-74) + Hard Rock Stand C (cx:750, cz:-34) — T13–14
+    price: '$1,500', priceNote: '3-Day Deck Pass',
+    tier: 'premium', x: 960, z: -100,
+    notes: [
+      'Best value hospitality experience — music festival + racing in one',
+      'Pool deck access with private daybed add-ons available',
+      'Past performers: Kaytranada, Kaskade (grid DJ), Marc Anthony',
+      'Live race broadcast on LED screens throughout the venue',
+      'Trackside views of Turns 11, 12, 13 & 14',
+      'Cabana packages: $50K for 1–10 guests (usually sold out)',
+    ],
+    verdict: 'Best balance of experience and actual race watching at Miami.',
+  },
+  {
+    label: 'PODIUM CLUB',
+    sub: 'Turns 4 & 9 · Podium Ceremony Access · Thu Night Party',
+    // T4(x:-216,z:81) and T9(x:-56,z:262) — Fountain Zone inside circuit
+    price: '$4,500', priceNote: '3-Day Pass  ·  All-Inclusive',
+    tier: 'luxury', x: -270, z: 145,
+    notes: [
+      'Only place where you\'re literally inside the podium ceremony zone',
+      'Front-row access when the winner sprays champagne — no screen needed',
+      'Thursday night party with headline DJs included in the package',
+      'Climate-controlled lounge · beer, wine & sparkling wine included',
+      'Dual-angle track views of Turns 4 & 9 from the Fountain Zone',
+      'Hard Rock Stadium · located in the heart of the circuit',
+    ],
+    verdict: 'Unique experience no other ticket replicates. Worth it for the podium alone.',
+  },
+  {
+    label: 'MSC YACHT CLUB',
+    sub: 'Turns 5–9 · All-Inclusive · Bagatelle Dining',
+    // T7(x:-612,z:199) → T8(x:-549,z:249) → T9(x:-56,z:262) marina bend — outward south
+    price: '$4,250', priceNote: '3-Day Deck Pass  ·  All-Inclusive',
+    tier: 'luxury', x: -450, z: 320,
+    notes: [
+      'Three-deck venue with panoramic marina views across Turns 5–9',
+      'Bagatelle — French-Mediterranean dining experience on-site',
+      'Jack Daniel\'s Lounge: craft cocktails, beer, wine, all-inclusive',
+      'Private cabanas for 20 guests (sold out every year — book early)',
+      'You\'re paying for the social scene — racing is the backdrop here',
+      'Presented by MSC Cruises · Marina District',
+    ],
+    verdict: 'Stunning social experience. More luxury party than race watching.',
+  },
+  {
+    label: 'PADDOCK CLUB',
+    sub: 'S/F Rooftop · Team Garages · The Ultimate',
+    // Above Main Grandstand (cx:125, cz:-156) — pit-lane rooftop, north of S/F straight
+    price: 'From $3K/day', priceNote: 'Per Person Per Day  ·  Up to $9K/day',
+    tier: 'ultra', x: 300, z: -250,
+    notes: [
+      'The pinnacle of F1 hospitality — exists at every race, Miami\'s is spectacular',
+      'Rooftop aerial views of the start/finish straight and pit lane below',
+      'Direct sightline to team garages — watch engineers and mechanics at work',
+      'Premium culinary and beverage experience · climate-controlled',
+      'Rooftop Club: $3K–$9K per person per day',
+      'Private suites: $500,000 for 50–100 guests for the full weekend',
+    ],
+    verdict: 'The ultimate. If price is no object, nothing else comes close.',
+  },
+];
+
+// ═══════════════════════════════════════════════
 // SCENE
 // ═══════════════════════════════════════════════
 const scene = new THREE.Scene();
@@ -652,6 +851,211 @@ function makeStandLabel(name, cx, cz) {
 }
 
 STANDS_DATA.forEach(s => scene.add(makeStandLabel(s.name, s.cx, s.cz)));
+
+// ═══════════════════════════════════════════════
+// VIEWING SPOT MARKERS — togglable with T key
+// Color-coded price cards floating above each zone
+// ═══════════════════════════════════════════════
+function rrPath(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.arcTo(x + w, y, x + w, y + r, r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+  ctx.lineTo(x + r, y + h);
+  ctx.arcTo(x, y + h, x, y + h - r, r);
+  ctx.lineTo(x, y + r);
+  ctx.arcTo(x, y, x + r, y, r);
+  ctx.closePath();
+}
+
+function makeViewingSprite(spot) {
+  const W = 560, H = 234;
+  const canvas = document.createElement('canvas');
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  const tc = TIER_COLORS[spot.tier];
+  const isWilliams = spot.tier === 'team' && spot.label.includes('WILLIAMS');
+
+  // Background
+  ctx.fillStyle = 'rgba(0,4,10,0.95)';
+  rrPath(ctx, 0, 0, W, H, 14);
+  ctx.fill();
+
+  // Header stripe
+  ctx.fillStyle = tc.hex;
+  ctx.globalAlpha = 0.20;
+  rrPath(ctx, 0, 0, W, 42, 14);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  // Border (extra glow for Williams)
+  ctx.strokeStyle = tc.hex;
+  ctx.lineWidth = isWilliams ? 3.5 : 2.5;
+  ctx.shadowColor = tc.hex;
+  ctx.shadowBlur = isWilliams ? 20 : 10;
+  rrPath(ctx, 1.5, 1.5, W - 3, H - 3, 14);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Name
+  const fontSize = spot.label.length > 18 ? 21 : 25;
+  ctx.font = `bold ${fontSize}px "Orbitron", monospace`;
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(spot.label, W / 2, 21);
+
+  // Price (big, glowing)
+  ctx.font = 'bold 52px "Orbitron", monospace';
+  ctx.fillStyle = tc.hex;
+  ctx.shadowColor = tc.hex;
+  ctx.shadowBlur = 22;
+  ctx.fillText(spot.price, W / 2, 90);
+  ctx.shadowBlur = 0;
+
+  // Price note (3-day label)
+  ctx.font = '18px "Rajdhani", sans-serif';
+  ctx.fillStyle = `${tc.hex}99`;
+  ctx.fillText(spot.priceNote || '3-Day Pass', W / 2, 118);
+
+  // Hairline divider
+  ctx.strokeStyle = `${tc.hex}33`;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(32, 132);
+  ctx.lineTo(W - 32, 132);
+  ctx.stroke();
+
+  // Sub-label lines
+  ctx.font = '19px "Rajdhani", sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.52)';
+  const words = spot.sub.split('·').map(w => w.trim());
+  ctx.fillText(words.slice(0, 2).join(' · '), W / 2, 152);
+  if (words.length > 2) ctx.fillText(words.slice(2).join(' · '), W / 2, 173);
+
+  // "▸ click for details" hint
+  ctx.font = '14px "Rajdhani", sans-serif';
+  ctx.fillStyle = `${tc.hex}66`;
+  ctx.letterSpacing = '2px';
+  ctx.fillText('▸  CLICK FOR DETAILS', W / 2, 210);
+
+  // Connector dot
+  ctx.fillStyle = tc.hex;
+  ctx.shadowColor = tc.hex;
+  ctx.shadowBlur = 12;
+  ctx.beginPath();
+  ctx.arc(W / 2, H - 7, 5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  const tex = new THREE.CanvasTexture(canvas);
+  const isLarge = isWilliams || spot.tier === 'ultra';
+  const sprite = new THREE.Sprite(
+    new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true, opacity: 0.95 }),
+  );
+  sprite.scale.set(isLarge ? 90 : 80, isLarge ? 37 : 33, 1);
+  sprite.position.set(spot.x, PLATFORM_Y + 65, spot.z);
+  return sprite;
+}
+
+// Connector lines from card bottom to track surface
+function makeConnectorLine(spot) {
+  const tc = TIER_COLORS[spot.tier];
+  const pts = [
+    new THREE.Vector3(spot.x, PLATFORM_Y + 1, spot.z),
+    new THREE.Vector3(spot.x, PLATFORM_Y + 46, spot.z),
+  ];
+  const geo = new THREE.BufferGeometry().setFromPoints(pts);
+  const mat = new THREE.LineBasicMaterial({
+    color: tc.num,
+    transparent: true,
+    opacity: 0.35,
+  });
+  return new THREE.Line(geo, mat);
+}
+
+const viewingGroup = new THREE.Group();
+viewingGroup.visible = false;
+
+// Map sprite → spot data for raycasting
+const spriteToSpot = new Map();
+
+VIEWING_SPOTS.forEach(spot => {
+  const sprite = makeViewingSprite(spot);
+  spriteToSpot.set(sprite, spot);
+  viewingGroup.add(sprite);
+  viewingGroup.add(makeConnectorLine(spot));
+});
+scene.add(viewingGroup);
+
+// ── Detail panel (HTML overlay) ──
+function showSpotPanel(spot) {
+  const tc = TIER_COLORS[spot.tier];
+  const panel = document.getElementById('spot-panel');
+
+  panel.style.setProperty('--tier-color', tc.hex);
+  document.getElementById('sp-tier').textContent = tc.label.toUpperCase();
+  document.getElementById('sp-tier').style.color = tc.hex;
+  document.getElementById('sp-name').textContent = spot.label;
+  document.getElementById('sp-price').textContent = spot.price;
+  document.getElementById('sp-price').style.color = tc.hex;
+  document.getElementById('sp-price-note').textContent = spot.priceNote || '3-Day Pass';
+  document.getElementById('sp-sub').textContent = spot.sub.replaceAll('·', '—');
+  document.getElementById('sp-verdict').textContent = spot.verdict;
+  document.getElementById('sp-verdict').style.borderLeftColor = tc.hex;
+
+  const ul = document.getElementById('sp-notes');
+  ul.innerHTML = '';
+  (spot.notes || []).forEach(n => {
+    const li = document.createElement('li');
+    li.textContent = n;
+    ul.appendChild(li);
+  });
+
+  panel.classList.add('open');
+}
+
+function hideSpotPanel() {
+  document.getElementById('spot-panel').classList.remove('open');
+}
+
+// ── Raycaster for sprite clicks ──
+const _raycaster = new THREE.Raycaster();
+const _mouse = new THREE.Vector2();
+
+renderer.domElement.addEventListener('click', e => {
+  if (!viewingGroup.visible) return;
+  _mouse.x =  (e.clientX / window.innerWidth)  * 2 - 1;
+  _mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  _raycaster.setFromCamera(_mouse, camera);
+  const sprites = [...spriteToSpot.keys()];
+  const hits = _raycaster.intersectObjects(sprites);
+  if (hits.length > 0) {
+    const spot = spriteToSpot.get(hits[0].object);
+    if (spot) { showSpotPanel(spot); return; }
+  }
+  hideSpotPanel();
+});
+
+function toggleViewingSpots() {
+  viewingGroup.visible = !viewingGroup.visible;
+  if (!viewingGroup.visible) hideSpotPanel();
+  const btn = document.getElementById('btn-tickets');
+  if (btn) {
+    btn.classList.toggle('active', viewingGroup.visible);
+    btn.textContent = viewingGroup.visible ? '🎟 Tickets ON' : '🎟 Tickets OFF';
+  }
+  const legend = document.getElementById('ticket-legend');
+  if (legend) legend.style.display = viewingGroup.visible ? 'block' : 'none';
+}
+
+window.addEventListener('keydown', e => {
+  if (e.key === 't' || e.key === 'T') toggleViewingSpots();
+  if (e.key === 'Escape') hideSpotPanel();
+});
 
 const TURN_POSITIONS = [
   { n: 1, x: 371.4, z: 15 },
