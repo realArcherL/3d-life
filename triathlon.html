@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IT Band Recovery → October Triathlon — Coach Notes</title>
+  <style>
+    /* ── Tokens ── */
+    :root {
+      --navy: #0f2044;
+      --blue-lt: #e8f0fe;
+      --green-lt: #e6f4ea;
+      --amber-lt: #fff8e1;
+      --red-lt: #fce8e6;
+      --purple-lt: #f3e8fd;
+      --surface: #ffffff;
+      --bg: #f6f8fc;
+      --border: #dde3ed;
+      --muted: #5a6472;
+      --text: #111827;
+      --radius: 10px;
+      --shadow: 0 1px 4px rgba(0,0,0,.07), 0 4px 16px rgba(0,0,0,.05);
+    }
+
+    /* ── Reset ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+      font-size: 15px;
+    }
+
+    /* ── Layout ── */
+    .page { max-width: 1020px; margin: 0 auto; padding: 24px 20px 48px; }
+
+    /* ── Page header ── */
+    .page-header {
+      background: var(--navy);
+      color: #fff;
+      padding: 28px 32px;
+      border-radius: var(--radius);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .page-header h1 { font-size: 1.55rem; font-weight: 700; line-height: 1.25; margin-bottom: 4px; }
+    .page-header .sub { color: rgba(255,255,255,.65); font-size: .9rem; }
+    .header-badges { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; flex-shrink: 0; }
+    .badge {
+      display: inline-block; padding: 3px 12px; border-radius: 999px;
+      font-size: .78rem; font-weight: 600; letter-spacing: .04em;
+      background: rgba(255,255,255,.12); color: rgba(255,255,255,.85);
+      border: 1px solid rgba(255,255,255,.2);
+      white-space: nowrap;
+    }
+    .badge.warn { background: rgba(239,68,68,.25); border-color: rgba(239,68,68,.5); color: #fca5a5; }
+
+    /* ── Nav tabs ── */
+    .tabs {
+      display: flex; gap: 4px; overflow-x: auto; margin-bottom: 20px;
+      padding-bottom: 2px;
+    }
+    .tabs a {
+      display: block; padding: 7px 16px; border-radius: 999px;
+      font-size: .85rem; font-weight: 500; color: var(--muted);
+      text-decoration: none; white-space: nowrap;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      transition: background .15s, color .15s;
+    }
+    .tabs a:hover { background: var(--navy); color: #fff; border-color: var(--navy); }
+
+    /* ── Two-col grid for plan + nutrition ── */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+    @media (max-width: 780px) { .two-col { grid-template-columns: 1fr; } }
+
+    /* ── Card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .card-head {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .card-head h2 { font-size: 1rem; font-weight: 700; color: var(--navy); }
+    .card-head .icon { font-size: 1.2rem; flex-shrink: 0; }
+    .card-body { padding: 16px 18px; }
+
+    /* ── Coloured card accents ── */
+    .accent-blue  .card-head { background: var(--blue-lt); }
+    .accent-green .card-head { background: var(--green-lt); }
+    .accent-amber .card-head { background: var(--amber-lt); }
+    .accent-red   .card-head { background: var(--red-lt); }
+    .accent-purple .card-head { background: var(--purple-lt); }
+
+    /* ── Typography helpers ── */
+    h3 { font-size: .9rem; font-weight: 700; color: var(--navy); margin: 14px 0 6px; }
+    h3:first-child { margin-top: 0; }
+    p { color: var(--muted); margin-bottom: 8px; font-size: .9rem; }
+    p:last-child { margin-bottom: 0; }
+    ul, ol { padding-left: 20px; margin-bottom: 8px; }
+    li { margin-bottom: 4px; font-size: .9rem; color: var(--text); }
+    li:last-child { margin-bottom: 0; }
+    strong { color: var(--text); font-weight: 600; }
+
+    /* ── Alert / callout ── */
+    .alert {
+      display: flex; gap: 10px; padding: 12px 14px;
+      border-radius: 8px; margin-bottom: 12px; font-size: .875rem;
+    }
+    .alert.red   { background: var(--red-lt);   border-left: 4px solid #ef4444; }
+    .alert.amber { background: var(--amber-lt); border-left: 4px solid #f59e0b; }
+    .alert.green { background: var(--green-lt); border-left: 4px solid #22c55e; }
+    .alert.blue  { background: var(--blue-lt);  border-left: 4px solid #3b82f6; }
+    .alert-icon { font-size: 1.1rem; flex-shrink: 0; }
+
+    /* ── Phase pill ── */
+    .phase-pill {
+      display: inline-block; font-size: .72rem; font-weight: 700;
+      letter-spacing: .06em; text-transform: uppercase;
+      padding: 2px 10px; border-radius: 999px;
+      margin-bottom: 8px;
+    }
+    .phase-pill.blue   { background: var(--blue-lt);   color: #1d4ed8; }
+    .phase-pill.green  { background: var(--green-lt);  color: #166534; }
+    .phase-pill.amber  { background: var(--amber-lt);  color: #92400e; }
+    .phase-pill.red    { background: var(--red-lt);    color: #991b1b; }
+    .phase-pill.purple { background: var(--purple-lt); color: #6b21a8; }
+
+    /* ── Table ── */
+    .tbl-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .875rem; }
+    th {
+      background: var(--navy); color: #fff;
+      padding: 8px 12px; text-align: left;
+      font-size: .75rem; letter-spacing: .05em; text-transform: uppercase;
+    }
+    td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:nth-child(even) td { background: #fafbfd; }
+
+    /* ── Phase block ── */
+    .phase-block {
+      border-left: 3px solid var(--border);
+      padding: 10px 0 10px 14px;
+      margin-bottom: 14px;
+    }
+    .phase-block:last-child { margin-bottom: 0; }
+    .phase-block.blue  { border-left-color: #3b82f6; }
+    .phase-block.green { border-left-color: #22c55e; }
+    .phase-block.amber { border-left-color: #f59e0b; }
+    .phase-block.red   { border-left-color: #ef4444; }
+    .phase-block.purple { border-left-color: #a855f7; }
+    .phase-block p { margin-bottom: 6px; }
+
+    /* ── Rule list ── */
+    .rule-list { list-style: none; padding: 0; }
+    .rule-list li {
+      display: flex; gap: 10px; align-items: flex-start;
+      padding: 7px 0; border-bottom: 1px solid var(--border); font-size: .875rem;
+    }
+    .rule-list li:last-child { border-bottom: none; }
+    .rule-num {
+      font-weight: 700; color: var(--navy);
+      min-width: 22px; flex-shrink: 0; margin-top: 1px;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 520px) {
+      .page-header { padding: 20px; }
+      .page-header h1 { font-size: 1.2rem; }
+      .card-body { padding: 12px 14px; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ── PAGE HEADER ── -->
+  <div class="page-header">
+    <div>
+      <h1>IT Band Recovery → October Triathlon</h1>
+      <div class="sub">For Coach Review · June 27, 2026</div>
+    </div>
+    <div class="header-badges">
+      <span class="badge">Santa Clara, CA</span>
+      <span class="badge">3×/wk strength + 2×/wk cardio</span>
+      <span class="badge">Wake 6:45 AM · Gym 7:45 AM</span>
+    </div>
+  </div>
+
+  <!-- ── TABS ── -->
+  <nav class="tabs">
+    <a href="#rituals">Daily Rituals</a>
+    <a href="#swim">Swim Weather</a>
+    <a href="#plan">Training Plan</a>
+    <a href="#nutrition">Nutrition</a>
+    <a href="#supplements">Supplements</a>
+    <a href="#checklist">Coach Checklist</a>
+  </nav>
+
+
+  <!-- ── DAILY RITUALS ── -->
+  <div class="card accent-amber" id="rituals">
+    <div class="card-head"><span class="icon">🌅</span><h2>Daily Rituals — Non-Negotiable</h2></div>
+    <div class="card-body">
+      <h3>Pre-Gym Morning Ritual — 6:45–7:30 AM (~20 min)</h3>
+      <p>Performed at home before leaving for the gym.</p>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Activity</th><th>Duration</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Heat hip-glute junction (left side)</td><td>10 min</td><td>Heating pad or hot towel while getting ready</td></tr>
+            <tr><td>2</td><td>Lacrosse ball glute med release</td><td>2 min/side</td><td>Lie on ball at tender spot, hold sore points 30–60 sec, moderate pressure</td></tr>
+            <tr><td>3</td><td>Stretch circuit — hold 30 sec × 2 reps each</td><td>~8 min</td><td>Figure-four · 90-90 hip · Standing IT band · Kneeling hip flexor/TFL lunge · Pigeon pose</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 style="margin-top:16px">Night Ritual — Before Bed (~15 min)</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Activity</th><th>Duration</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Ice lateral knee</td><td>15 min</td><td>Wrapped in cloth. Drop once knee is no longer tender to touch</td></tr>
+            <tr><td>2</td><td>Foam roll: quads, hamstrings, calves, TFL</td><td>60 sec/group</td><td>NOT directly on IT band or tender hip spot</td></tr>
+            <tr><td>3</td><td>Lacrosse ball glute med release</td><td>2 min/side</td><td>Same as morning</td></tr>
+            <tr><td>4</td><td>Stretch circuit</td><td>~8 min</td><td>Same 5 stretches as morning</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 style="margin-top:16px">Ice / Heat Quick Reference</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Area</th><th>Modality</th><th>When</th></tr></thead>
+          <tbody>
+            <tr><td>Lateral knee</td><td><strong>ICE</strong></td><td>After activity or if flared (15 min on / 60 min off)</td></tr>
+            <tr><td>Hip-glute junction</td><td><strong>HEAT</strong></td><td>Before stretching/exercises, 10 min</td></tr>
+            <tr><td>IT band / TFL area</td><td><strong>HEAT</strong></td><td>Before stretching, combine with foam rolling</td></tr>
+            <tr><td>Lateral knee (acute flare)</td><td><strong>ICE</strong></td><td>15 min on / 60 min off / repeat 2–3×</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ── SWIM WEATHER ── -->
+  <div class="card accent-blue" id="swim">
+    <div class="card-head"><span class="icon">🏊</span><h2>Outdoor Swim Weather — Santa Clara</h2></div>
+    <div class="card-body">
+      <p style="margin-bottom:12px">Current 7-day forecast for Santa Clara, CA. Check before heading to the pool.</p>
+      <div id="weather-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px"></div>
+      <p id="weather-error" style="color:var(--muted);font-size:.85rem;display:none">Unable to load weather data.</p>
+      <p style="margin-top:10px;font-size:.78rem;color:var(--muted)">Source: Open-Meteo · Santa Clara, CA (37.35°N 121.95°W)</p>
+    </div>
+  </div>
+
+  <script>
+  (function(){
+    const grid = document.getElementById('weather-grid');
+    const err  = document.getElementById('weather-error');
+    const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const wmo  = {
+      0:'Clear',1:'Mostly clear',2:'Partly cloudy',3:'Overcast',
+      45:'Foggy',48:'Icy fog',51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',
+      61:'Light rain',63:'Rain',65:'Heavy rain',
+      71:'Light snow',73:'Snow',75:'Heavy snow',
+      80:'Showers',81:'Heavy showers',82:'Violent showers',
+      95:'Thunderstorm',96:'Thunderstorm+hail',99:'Thunderstorm+hail'
+    };
+    fetch('https://api.open-meteo.com/v1/forecast?latitude=37.3541&longitude=-121.9552&daily=temperature_2m_max,temperature_2m_min,weathercode&temperature_unit=fahrenheit&timezone=America%2FLos_Angeles&forecast_days=7')
+      .then(r => r.json())
+      .then(d => {
+        const {time, temperature_2m_max: maxT, temperature_2m_min: minT, weathercode: wc} = d.daily;
+        time.forEach((t, i) => {
+          const date = new Date(t + 'T12:00:00');
+          const label = i === 0 ? 'Today' : days[date.getDay()];
+          const desc = wmo[wc[i]] || 'Unknown';
+          const hot = maxT[i] >= 90;
+          const card = document.createElement('div');
+          card.style.cssText = 'background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 8px;text-align:center;';
+          card.innerHTML = `
+            <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:4px">${label}</div>
+            <div style="font-size:.75rem;color:var(--muted);margin-bottom:6px">${date.toLocaleDateString('en-US',{month:'short',day:'numeric'})}</div>
+            <div style="font-size:1.4rem;margin-bottom:2px">${wc[i]<=1?'☀️':wc[i]<=3?'⛅':wc[i]<=48?'🌫️':wc[i]<=67?'🌧️':wc[i]<=77?'🌨️':'⛈️'}</div>
+            <div style="font-size:.72rem;color:var(--muted);margin-bottom:8px">${desc}</div>
+            <div style="font-size:1.1rem;font-weight:700;color:${hot?'#dc2626':'var(--navy)'}">${Math.round(maxT[i])}°F</div>
+            <div style="font-size:.85rem;color:var(--muted)">${Math.round(minT[i])}°F</div>
+          `;
+          grid.appendChild(card);
+        });
+      })
+      .catch(() => { err.style.display='block'; });
+  })();
+  </script>
+
+
+  <!-- ── TWO-COL: PLAN + NUTRITION ── -->
+  <div class="two-col">
+
+    <!-- LEFT: TRAINING PLAN -->
+    <div id="plan">
+      <div class="card accent-green">
+        <div class="card-head"><span class="icon">📅</span><h2>Week-by-Week Training Plan</h2></div>
+        <div class="card-body">
+          <p>Existing 3 strength + 2 cardio schedule stays. Plan adds, swaps, or modifies within those sessions.</p>
+
+          <div class="phase-block blue">
+            <span class="phase-pill blue">Phase 1 · Weeks 1–2 · June 28–July 11</span>
+            <h3>Calm &amp; Activate — No Running</h3>
+            <p><strong>Status:</strong> No running. Cycling only if pain-free.</p>
+            <p><strong>Every strength session warm-up:</strong> Clamshells 3×15 · Glute bridges 3×12 · Side-lying leg raises 3×12 · Prone hip extensions 3×10</p>
+            <p><strong>Cardio days:</strong> Swap running for swimming, elliptical, pool running, or flat walking. NO running.</p>
+            <p><strong>Milestone:</strong> Pain-free 30-min walk, clamshells easy at bodyweight, lateral knee tenderness significantly reduced.</p>
+          </div>
+
+          <div class="phase-block green">
+            <span class="phase-pill green">Phase 2 · Weeks 3–4 · July 12–25</span>
+            <h3>Build Foundation — Still No Running</h3>
+            <p><strong>Strength accessory:</strong> Banded clamshells 3×15 · Single-leg glute bridges 3×10/side · Lateral band walks 3×12/direction · Mini squats to 45° 3×12 · Step-ups (6–8″) 3×10/side · Side plank 3×20s/side</p>
+            <p><strong>Swim:</strong> 3–4×/week, 30–40 min. Start interval sets (50m repeats). <strong>Cycling:</strong> Easy 2×/week, 20–30 min flat. Monitor lateral knee.</p>
+            <p><strong>Milestone:</strong> Pain-free 30-min bike ride, 15 single-leg bridges/side, all exercises without lateral knee discomfort.</p>
+          </div>
+
+          <div class="phase-block amber">
+            <span class="phase-pill amber">Phase 3 · Weeks 5–6 · July 26–Aug 8</span>
+            <h3>First Running + Load</h3>
+            <div class="tbl-wrap" style="margin:8px 0">
+              <table>
+                <thead><tr><th>Week</th><th>Run Protocol</th><th>Frequency</th></tr></thead>
+                <tbody>
+                  <tr><td>Week 5</td><td>1 min run / 2 min walk × 7 rounds = 21 min</td><td>2×/week, not back-to-back</td></tr>
+                  <tr><td>Week 6</td><td>2 min run / 1.5 min walk × 7 rounds = 24.5 min</td><td>2×/week, not back-to-back</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p><strong>Cadence target: 170+ spm.</strong> Use a metronome app.</p>
+            <p><strong>Strength additions:</strong> Forward lunges 3×10/side · Single-leg RDL 3×8/side · Split squats 3×10/side · Resisted crab walks 3×12/direction. Continue lateral band walks and single-leg bridges.</p>
+            <p><strong>Swim:</strong> 4×/week, 35–45 min. Start open water if race is open water. <strong>Cycling:</strong> 2–3×/week, 30–45 min, gentle hills.</p>
+            <div class="alert red" style="margin-top:8px">
+              <span class="alert-icon">🛑</span>
+              <div><strong>STOP RULE:</strong> Lateral knee pain ≥2/10 during any run → walk home, 2–3 days off running, continue strength, retry at reduced volume. Notify coach.</div>
+            </div>
+          </div>
+
+          <div class="phase-block amber">
+            <span class="phase-pill amber">Phase 4 · Weeks 7–8 · Aug 9–22</span>
+            <h3>Build Run Volume — Maximise Swim</h3>
+            <div class="tbl-wrap" style="margin:8px 0">
+              <table>
+                <thead><tr><th>Week</th><th>Run Structure</th><th>Frequency</th></tr></thead>
+                <tbody>
+                  <tr><td>Week 7</td><td>3 min run / 1 min walk, 30 min total</td><td>3×/week</td></tr>
+                  <tr><td>Week 8</td><td>5 min run / 1 min walk, 30 min total</td><td>3×/week</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p>Increase total run distance max 10%/week. <strong>Swim 4–5×/week, 40–50 min</strong> — get longest swims in NOW. Brick workouts: swim→bike or swim→run 1×/week. <strong>Cycling:</strong> 2–3×/week, 45–60 min, hills and tempo.</p>
+            <p><strong>Milestone:</strong> 15 min continuous pain-free run, single-leg squat to 45° solid and controlled.</p>
+          </div>
+
+          <div class="phase-block purple">
+            <span class="phase-pill purple">Phase 5 · Weeks 9–10 · Aug 23–Sep 5</span>
+            <h3>Continuous Running — Final Pool Sessions</h3>
+            <div class="tbl-wrap" style="margin:8px 0">
+              <table>
+                <thead><tr><th>Week</th><th>Run Structure</th><th>Frequency</th></tr></thead>
+                <tbody>
+                  <tr><td>Week 9</td><td>2 × 10 min continuous with 2 min walk between</td><td>3×/week</td></tr>
+                  <tr><td>Week 10</td><td>15–20 min continuous, one run up to 25 min</td><td>3×/week</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p><strong>Swim (LAST 1–2 WEEKS):</strong> 5×/week, 45–60 min. Include full race-distance swims. Brick workouts 2×/week.</p>
+            <p><strong>Strength drops to 2×/week (maintenance).</strong> Adds: Controlled lateral skaters 3×8/side (first plyometric — start at 2×6, easy). <em>Athlete past issues *: if any groin pulling, substitute lateral lunge.</em></p>
+          </div>
+
+          <div class="phase-block red">
+            <span class="phase-pill red">Phase 6 · Weeks 11–12 · Sep 6–19</span>
+            <h3>No Pool — Bike &amp; Run Focus</h3>
+            <p><strong>Swim replacement (2×/week dryland):</strong> Band lat pulldowns, band pull-aparts, prone Y-T-W raises. Use any open water available (lake, ocean) even 1×/week.</p>
+            <div class="tbl-wrap" style="margin:8px 0">
+              <table>
+                <thead><tr><th>Week</th><th>Long Run</th><th>Other Runs</th><th>Weekly Total</th></tr></thead>
+                <tbody>
+                  <tr><td>Week 11</td><td>25–30 min</td><td>2 × 20 min easy</td><td>~65–70 min</td></tr>
+                  <tr><td>Week 12</td><td>30–35 min</td><td>2 × 20–25 min</td><td>~75–80 min</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p><strong>Cycling:</strong> 3–4×/week, 60–90 min. One long ride 75–90 min. Brick: bike→run 1×/week. <strong>Strength: do not drop below 2×/week.</strong></p>
+          </div>
+
+          <div class="phase-block red">
+            <span class="phase-pill red">Phase 7 · Weeks 13–14 · Race Prep</span>
+            <h3>Peak Week (Wk 13) + Taper (Wk 14)</h3>
+            <p><strong>Week 13 peak:</strong> Longest run 35–40 min · Longest bike 90 min · Full brick race simulation · One tempo/race-pace effort each · Strength 1–2×/week, 2 sets.</p>
+            <p><strong>Week 14 taper:</strong> Cut volume 40–50% · Short easy runs 15–20 min · Easy spin 30 min · No heavy strength — morning ritual only · Rest 1–2 days before race · Continue night ritual unchanged.</p>
+          </div>
+
+          <h3>Permanent Bulletproofing Rules</h3>
+          <ol class="rule-list">
+            <li><span class="rule-num">1.</span><span><strong>Morning ritual every day.</strong> Heat, release, stretch, activate. Even race day.</span></li>
+            <li><span class="rule-num">2.</span><span><strong>Hip strengthening 2×/week minimum forever.</strong> Maintenance, not rehab.</span></li>
+            <li><span class="rule-num">3.</span><span><strong>10% rule.</strong> Never increase weekly running volume more than 10%.</span></li>
+            <li><span class="rule-num">4.</span><span><strong>Cadence 170+ spm.</strong> Shorter, quicker steps reduce IT band load per stride.</span></li>
+            <li><span class="rule-num">5.</span><span><strong>No back-to-back hard days.</strong> Hard run → hard bike = consecutive loading.</span></li>
+            <li><span class="rule-num">6.</span><span><strong>Replace running shoes every 300–500 miles.</strong></span></li>
+            <li><span class="rule-num">7.</span><span><strong>Exhale on exertion.</strong> Never hold breath under load. Protects athlete past issues *.</span></li>
+            <li><span class="rule-num">8.</span><span><strong>2/10 pain rule.</strong> Lateral knee ≥2/10 during any run: stop, walk home, 2–3 days off, retry at reduced volume.</span></li>
+          </ol>
+
+          <h3 style="margin-top:16px">Red Flags — Refer to Professional</h3>
+          <ul>
+            <li>Knee pain has not improved at all by Week 4</li>
+            <li>Pain is getting worse despite following the plan</li>
+            <li>Numbness, tingling, or pain radiating down the leg</li>
+            <li>Hip junction pain becomes sharp with walking</li>
+            <li>Cannot do a pain-free single-leg squat to 45° by Week 6</li>
+            <li>Any increase in groin pressure or sharp groin pain during exercise related to athlete past issues *</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: NUTRITION -->
+    <div id="nutrition">
+      <div class="card accent-purple">
+        <div class="card-head"><span class="icon">🥗</span><h2>Nutrition Plan</h2></div>
+        <div class="card-body">
+          <h3>Priorities (In Order)</h3>
+          <ol>
+            <li><strong>Do not cut calories during recovery.</strong> Healing tissue requires energy. Calorie deficit slows tendon and connective tissue repair.</li>
+            <li><strong>Protein elevated</strong> — rebuilding tissue AND training.</li>
+            <li><strong>Carbs periodised</strong> — match training load week by week.</li>
+            <li><strong>Anti-inflammatory foods</strong> — support IT band and athlete past issues *.</li>
+            <li><strong>Collagen + vitamin C</strong> — strongest evidence-based intervention for tendon recovery.</li>
+          </ol>
+
+          <h3>Calorie Rule</h3>
+          <p>Eat at <strong>maintenance or a very slight surplus during Phases 1–5.</strong> Baseline: 30 kcal/kg body weight + 5–10 kcal/kg/day for tissue repair. Only consider a modest deficit (300–500 cal max) in the final 2 weeks if needed, once healing is well established.</p>
+
+          <h3>Macro Targets by Phase</h3>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Phase</th><th>Weeks</th><th>Carbs (g/kg/day)</th><th>Protein (g/kg/day)</th><th>Fat (g/kg/day)</th></tr></thead>
+              <tbody>
+                <tr><td>Recovery / Foundation</td><td>1–4</td><td>3–5</td><td>1.8–2.0</td><td>1.0–1.5</td></tr>
+                <tr><td>Build</td><td>5–8</td><td>5–7</td><td>1.6–1.8</td><td>1.0–1.5</td></tr>
+                <tr><td>High Volume</td><td>9–12</td><td>7–8</td><td>1.6–1.8</td><td>1.0–1.5</td></tr>
+                <tr><td>Peak (Wk 13)</td><td>13</td><td>7–8</td><td>1.6</td><td>1.0–1.2</td></tr>
+                <tr><td>Taper / Race Week</td><td>14</td><td>8–10 (carb load)</td><td>1.4–1.6</td><td>0.8–1.0</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Daily Meal Framework (Weeks 1–4 Template)</h3>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Time</th><th>Meal / Notes</th></tr></thead>
+              <tbody>
+                <tr><td><strong>6:45 AM</strong></td><td>Collagen (15 g) in plain water + 50 mg vitamin C tablet. No food yet — collagen reaches tissue before gym load.</td></tr>
+                <tr><td><strong>7:15 AM</strong></td><td>Small pre-gym fuel (150–200 cal): banana + handful of nuts, OR berries + almond butter. 1 tbsp EVOO straight or with meal. Do NOT eat a full meal — full stomach before training.</td></tr>
+                <tr><td><strong>~9:15 AM</strong></td><td>Post-gym real breakfast: 3 eggs + spinach/tomatoes + whole grain toast + avocado + berries + EVOO. NAC 600 mg. ~35 g protein, ~40 g carbs.</td></tr>
+                <tr><td><strong>12:30 PM</strong></td><td>Grilled salmon or chicken (6 oz) + large salad with EVOO + sweet potato/quinoa/lentils (1 cup). ~40 g protein, ~45 g carbs.</td></tr>
+                <tr><td><strong>3:30 PM</strong></td><td>Apple + almond butter (2 tbsp) + protein shake if needed. ~20 g protein, ~30 g carbs.</td></tr>
+                <tr><td><strong>7:00 PM</strong></td><td>Lean protein (6 oz) + large roasted vegetables + brown rice/lentils (1 cup) + EVOO + garlic + ginger + fermented veg (2–3 tbsp) + curcumin 1 g + dark chocolate 10–20 g. ~35 g protein, ~50 g carbs.</td></tr>
+                <tr><td><strong>9:30 PM</strong></td><td>Cottage cheese (1 cup) or Greek yogurt with chia seeds. Optional second curcumin (1 g). ~25 g slow-digesting protein.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>During Training / Around Workouts</h3>
+          <ul>
+            <li><strong>Pre-workout (60–90 min before):</strong> 1–2 g/kg carbs + moderate protein (oatmeal + banana + protein)</li>
+            <li><strong>Post-workout (within 30 min):</strong> 0.5 g/kg carbs + 20–30 g protein (shake + fruit, or chicken + rice)</li>
+            <li><strong>During sessions &gt;60 min:</strong> 30–60 g carbs/hour (sports drink, gel, banana). Sprint race may not need mid-race fueling (45–90 min).</li>
+          </ul>
+
+          <h3>Race Week Nutrition</h3>
+          <p><strong>2–3 days before race (carb load):</strong> White rice, pasta, bread, potatoes at every meal. Reduce fibre slightly. Keep protein at 1.4–1.6 g/kg. Hydrate aggressively with electrolytes.</p>
+          <p><strong>Race morning (3–4 hrs before):</strong> Familiar, easy-to-digest, carb-rich meal — white rice with honey, plain toast with jam, banana. Small protein. Nothing new on race day.</p>
+          <p><strong>During race: Swim</strong> — no fueling. <strong>Bike</strong> — 60–90 g carbs/hour (primary fueling window). <strong>Run</strong> — 30–60 g carbs/hour, whatever gut tolerates. Practice this in training.</p>
+
+          <h3>Anti-Inflammatory Foods (Daily Priority)</h3>
+          <ul>
+            <li><strong>Extra virgin olive oil:</strong> 2 tbsp/day minimum — primary cooking and finishing fat (Blueprint non-negotiable)</li>
+            <li><strong>Fatty fish</strong> (salmon, mackerel, sardines): 2–3 servings/week</li>
+            <li><strong>Berries</strong> (blueberries, strawberries, blackberries): eat daily, not juiced</li>
+            <li><strong>Leafy greens:</strong> spinach, kale, arugula daily</li>
+            <li><strong>Cruciferous vegetables:</strong> broccoli, cauliflower, Brussels sprouts</li>
+            <li><strong>Curcumin/turmeric:</strong> 1 g supplemental with black pepper (with dinner, optionally before bed)</li>
+            <li><strong>Fermented foods:</strong> 2–3 tbsp daily of sauerkraut or kimchi</li>
+            <li><strong>Nuts and seeds</strong> (walnuts, flaxseed, chia, hemp): omega-3, zinc, fibre</li>
+            <li><strong>Dark chocolate 85%+:</strong> 10–20 g daily for flavanols</li>
+          </ul>
+
+          <h3>Foods to Eliminate or Strictly Limit</h3>
+          <ul>
+            <li>Processed foods — eliminate or maximum 10%</li>
+            <li>Seed oils high in omega-6 (corn, soybean, sunflower, canola) — replace with EVOO and avocado oil</li>
+            <li>Added sugar in all forms — no fruit juice, no sweetened yogurts, no sports drinks outside sessions &gt;60 min</li>
+            <li>Alcohol — impairs tissue healing, sleep, and increases inflammation</li>
+            <li>Fried foods and processed meats</li>
+          </ul>
+
+          <h3>Additional Nutrition Notes (athlete past issues *)</h3>
+          <ul>
+            <li>Fibre 25–30 g/day prevents constipation (reduces intra-abdominal pressure)</li>
+            <li>Hydrate to pale-yellow urine all day (supports circulation and venous return)</li>
+            <li>Avoid bloating triggers before training: large meals, carbonated drinks, excess raw cruciferous veg. Eat big meals ≥90 min before gym.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end two-col -->
+
+
+  <!-- ── CONNECTIVE TISSUE PROTOCOL ── -->
+  <div class="card accent-green" id="supplements">
+    <div class="card-head"><span class="icon">🧪</span><h2>Connective Tissue Protocol &amp; Supplement Stack</h2></div>
+    <div class="card-body">
+      <div class="alert green">
+        <span class="alert-icon">⭐</span>
+        <div><strong>Collagen + Vitamin C is the strongest evidence-based nutritional intervention for tendon recovery.</strong> GRADE A evidence from systematic review of 8 RCTs for increases in tendon cross-sectional area and stiffness at 15–30 g/day paired with resistance training.</div>
+      </div>
+
+      <h3>Collagen Protocol</h3>
+      <p><strong>15–30 g hydrolysed collagen peptides + 50 mg vitamin C</strong>, taken 30–60 minutes before rehab exercises or morning ritual. Use a vitamin C tablet or whole food (strawberries, bell pepper) — NOT juice, which spikes blood glucose. Collagen is a targeted supplement, NOT a protein substitute.</p>
+
+      <h3>Full Supplement Stack (Evidence-Backed Only)</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Supplement</th><th>Dose</th><th>Timing</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Hydrolysed collagen peptides</strong></td><td>15–30 g</td><td>30–60 min before rehab exercises, with vitamin C tablet</td></tr>
+            <tr><td><strong>Vitamin C tablet</strong></td><td>50–100 mg</td><td>With collagen, on empty stomach</td></tr>
+            <tr><td><strong>Extra virgin olive oil (high-polyphenol)</strong></td><td>2 tbsp (30 ml) daily</td><td>1 tbsp morning, 1 tbsp on food</td></tr>
+            <tr><td><strong>Curcumin</strong></td><td>1 g, 1–2× daily</td><td>With dinner (and optionally before bed), always with black pepper/piperine</td></tr>
+            <tr><td><strong>Omega-3 fish oil (EPA/DHA)</strong></td><td>2–3 g combined</td><td>With meals. Hold high-dose supplement until Week 3 — some early inflammation is necessary for initial healing.</td></tr>
+            <tr><td><strong>Vitamin D3</strong></td><td>1000–2000 IU (get levels tested)</td><td>With a fat-containing meal. Santa Clara sun helps but may not be sufficient.</td></tr>
+            <tr><td><strong>Magnesium</strong></td><td>200–400 mg</td><td>Before bed — supports muscle function, reduces cramping, improves sleep</td></tr>
+            <tr><td><strong>NAC (N-acetylcysteine)</strong></td><td>600–1200 mg</td><td>Morning — precursor to glutathione, reduces oxidative stress</td></tr>
+            <tr><td><strong>Electrolytes</strong></td><td>As needed</td><td>During/after long sessions &gt;60 min, critical from Phase 5 onward</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="alert amber" style="margin-top:12px">
+        <span class="alert-icon">⚠️</span>
+        <div><strong>Do NOT take NSAIDs long-term</strong> — chronic use may impair tendon healing. Use only for acute flares on physician guidance. Do not self-prescribe metformin, acarbose, or other prescription supplements from longevity protocols.</div>
+      </div>
+
+      <h3>Key Micronutrients for Tissue Repair</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Nutrient</th><th>Why It Matters</th><th>Best Sources</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Vitamin C</strong></td><td>Essential cofactor for collagen synthesis</td><td>Strawberries, bell peppers, broccoli, kiwi (whole food, not juice)</td></tr>
+            <tr><td><strong>Vitamin D</strong></td><td>Restores collagen expression in tendon cells; bone health</td><td>Sunlight 20 min/day, fatty fish, eggs; supplement if low</td></tr>
+            <tr><td><strong>Zinc</strong></td><td>Wound healing, tissue repair, growth enzymes</td><td>Meat, shellfish, pumpkin seeds, lentils, chickpeas · 11 mg/day</td></tr>
+            <tr><td><strong>Omega-3 (EPA/DHA)</strong></td><td>Anti-inflammatory, supports muscle protein synthesis</td><td>Fatty fish, fish oil, walnuts, flaxseed · 2–3 g combined/day</td></tr>
+            <tr><td><strong>Magnesium</strong></td><td>Muscle function, cramp reduction, sleep quality</td><td>Nuts, seeds, dark chocolate, leafy greens · 400–420 mg/day</td></tr>
+            <tr><td><strong>Calcium</strong></td><td>Bone and connective tissue health</td><td>Dairy, fortified plant milks, leafy greens, sardines · 1000 mg/day</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ── COACH CHECKLIST ── -->
+  <div class="card accent-amber" id="checklist">
+    <div class="card-head"><span class="icon">✅</span><h2>Coach Checklist — Practical Actions</h2></div>
+    <div class="card-body">
+      <ol class="rule-list">
+        <li><span class="rule-num">1.</span><span>Prescribe and enforce the <strong>morning and night rituals</strong> as daily maintenance throughout the full 14 weeks.</span></li>
+        <li><span class="rule-num">2.</span><span>Apply the <strong>stop rule</strong> for runs: lateral knee ≥2/10 → stop, walk, 2–3 days off, retry at lower volume.</span></li>
+        <li><span class="rule-num">3.</span><span>Prioritise <strong>unilateral glute work</strong> in all phases. Avoid heavy bilateral deadlifts and barbell squats throughout the plan.</span></li>
+        <li><span class="rule-num">4.</span><span><strong>Bank swim sessions July–August.</strong> Plan dryland swim replacements (band lat pulls, prone Y-T-W) for September.</span></li>
+        <li><span class="rule-num">5.</span><span>Remind athlete to take <strong>collagen + vitamin C before rehab/gym</strong>, not alongside meals.</span></li>
+        <li><span class="rule-num">6.</span><span>Monitor for <strong>athlete past issues *</strong> with any exercise that increases intra-abdominal pressure. Substitute freely if groin discomfort arises.</span></li>
+        <li><span class="rule-num">7.</span><span>Enforce the <strong>10% weekly run volume rule</strong> — do not increase more aggressively even if the athlete feels good.</span></li>
+        <li><span class="rule-num">8.</span><span>Track <strong>cadence at 170+ spm</strong> on all runs.</span></li>
+        <li><span class="rule-num">9.</span><span>Incorporate <strong>brick workouts</strong> (swim→bike or bike→run) from Phase 4 onward to train race-day transitions.</span></li>
+        <li><span class="rule-num">10.</span><span>Red flags: refer immediately if knee not improving by Week 4, radiating pain, or athlete past issues * worsen.</span></li>
+      </ol>
+    </div>
+  </div>
+
+
+  <!-- ── FOOTER ── -->
+  <footer style="text-align:center; color:var(--muted); font-size:.82rem; margin-top:8px; padding:12px 0">
+    Source: <em>notes/plan.md</em> and <em>notes/food.md</em> · June 27, 2026 ·
+    Consult medical professionals for red flags or if symptoms worsen
+  </footer>
+
+</div>
+</body>
+</html>
